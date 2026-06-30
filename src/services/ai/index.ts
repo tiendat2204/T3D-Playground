@@ -1,4 +1,5 @@
-import { type AIProvider, type AIProviderConfig } from '@/types/ai'
+import { type AIProvider } from './provider.interface'
+import { type AIProviderConfig } from '@/types/ai'
 import { OpenAIProvider } from './openai.provider'
 import { aiCache } from './cache'
 
