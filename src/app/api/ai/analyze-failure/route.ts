@@ -24,7 +24,7 @@ export async function POST(request: Request) {
   const analysis = await provider.analyzeFailure({
     testCode: testCase?.generatedCode || '',
     errorMessage: result.errorMessage || '',
-    consoleLogs: result.consoleLogs as string[] || [],
+    consoleLogs: (result.consoleLogs as string[]) || [],
     currentUrl: undefined,
     failedStep: undefined
   })
