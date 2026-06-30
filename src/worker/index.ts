@@ -1,4 +1,4 @@
-import { createTestRunWorker, testRunQueue } from './bullmq.config'
+import { createTestRunWorker } from './bullmq.config'
 import { db } from '@/db'
 import { testRuns, testCases, environments } from '@/db/schema'
 import { eq } from 'drizzle-orm'

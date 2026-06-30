@@ -26,12 +26,10 @@ export async function executePlaywrightTest(
   await fs.writeFile(testFile, testCode)
 
   const startTime = Date.now()
-  const envString = Object.entries(envVars)
-    .map(([key, value]) => `${key}="${value}"`)
-    .join(' ')
 
   try {
     const { stdout, stderr } = await execAsync(
+      // TODO: Parse JSON reporter output to extract structured test results
       `npx playwright test ${testFile} --reporter=json`,
       {
         env: { ...process.env, ...envVars },
