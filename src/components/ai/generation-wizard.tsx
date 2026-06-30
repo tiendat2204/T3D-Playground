@@ -12,9 +12,9 @@ import { Input } from '@/components/ui/input'
 import { Textarea } from '@/components/ui/textarea'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Label } from '@/components/ui/label'
-import { Select } from '@/components/ui/select'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs'
-import { Loader2, CheckCircle } from 'lucide-react'
+import { Loader2 } from 'lucide-react'
+import { toast } from 'sonner'
 
 const wizardSchema = z.object({
   projectId: z.string().min(1, 'Project is required'),
@@ -44,9 +44,13 @@ export function GenerationWizard() {
   const generateCode = useGenerateCode()
 
   const onSubmit = async (data: WizardFormData) => {
-    const result = await generatePlan.mutateAsync(data)
-    setGeneratedPlan(result)
-    setStep(1)
+    try {
+      const result = await generatePlan.mutateAsync(data)
+      setGeneratedPlan(result)
+      setStep(1)
+    } catch (error) {
+      toast.error('Failed to generate test plan. Please try again.')
+    }
   }
 
   return (
