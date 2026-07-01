@@ -1,25 +1,19 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api-client'
+import { bugReportsService, type BugReport, type CreateBugReportInput } from '@/services/bug-reports.service'
 
 export function useBugReports(filters?: Record<string, string>) {
   return useQuery({
     queryKey: ['bugReports', filters],
-    queryFn: async () => {
-      try {
-        return await api.bugReports.list(filters)
-      } catch {
-        return []
-      }
-    }
+    queryFn: () => bugReportsService.list(filters)
   })
 }
 
 export function useBugReport(id: string) {
   return useQuery({
     queryKey: ['bugReports', id],
-    queryFn: () => api.bugReports.get(id),
+    queryFn: () => bugReportsService.get(id),
     enabled: !!id
   })
 }
@@ -27,7 +21,7 @@ export function useBugReport(id: string) {
 export function useCreateBugReport() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: unknown) => api.bugReports.create(data),
+    mutationFn: (data: CreateBugReportInput) => bugReportsService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['bugReports'] })
     }
@@ -37,7 +31,8 @@ export function useCreateBugReport() {
 export function useUpdateBugReport() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: unknown }) => api.bugReports.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<BugReport> }) =>
+      bugReportsService.update(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['bugReports'] })
       queryClient.invalidateQueries({ queryKey: ['bugReports', variables.id] })

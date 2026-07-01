@@ -1,25 +1,19 @@
 'use client'
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
-import { api } from '@/lib/api-client'
+import { projectsService, type Project, type CreateProjectInput } from '@/services/projects.service'
 
 export function useProjects() {
   return useQuery({
     queryKey: ['projects'],
-    queryFn: async () => {
-      try {
-        return await api.projects.list()
-      } catch {
-        return []
-      }
-    }
+    queryFn: () => projectsService.list()
   })
 }
 
 export function useProject(id: string) {
   return useQuery({
     queryKey: ['projects', id],
-    queryFn: () => api.projects.get(id),
+    queryFn: () => projectsService.get(id),
     enabled: !!id
   })
 }
@@ -27,7 +21,7 @@ export function useProject(id: string) {
 export function useCreateProject() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (data: unknown) => api.projects.create(data),
+    mutationFn: (data: CreateProjectInput) => projectsService.create(data),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
     }
@@ -37,7 +31,8 @@ export function useCreateProject() {
 export function useUpdateProject() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: unknown }) => api.projects.update(id, data),
+    mutationFn: ({ id, data }: { id: string; data: Partial<CreateProjectInput> }) =>
+      projectsService.update(id, data),
     onSuccess: (_, variables) => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
       queryClient.invalidateQueries({ queryKey: ['projects', variables.id] })
@@ -48,34 +43,9 @@ export function useUpdateProject() {
 export function useDeleteProject() {
   const queryClient = useQueryClient()
   return useMutation({
-    mutationFn: (id: string) => api.projects.delete(id),
+    mutationFn: (id: string) => projectsService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
-    }
-  })
-}
-
-export function useProjectEnvironments(projectId: string) {
-  return useQuery({
-    queryKey: ['projects', projectId, 'environments'],
-    queryFn: async () => {
-      try {
-        return await api.environments.list(projectId)
-      } catch {
-        return []
-      }
-    },
-    enabled: !!projectId
-  })
-}
-
-export function useCreateEnvironment() {
-  const queryClient = useQueryClient()
-  return useMutation({
-    mutationFn: ({ projectId, data }: { projectId: string; data: unknown }) =>
-      api.environments.create(projectId, data),
-    onSuccess: (_, variables) => {
-      queryClient.invalidateQueries({ queryKey: ['projects', variables.projectId, 'environments'] })
     }
   })
 }
