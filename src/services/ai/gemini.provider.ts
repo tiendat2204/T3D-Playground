@@ -59,7 +59,7 @@ export class GeminiProvider implements AIProvider {
   name = 'gemini'
   private model: string
 
-  constructor(model = 'gemini-2.5-pro') {
+  constructor(model = 'gemini-2.5-flash') {
     this.model = model
   }
 
