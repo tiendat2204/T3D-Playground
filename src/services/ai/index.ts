@@ -1,5 +1,4 @@
 import { type AIProvider } from './provider.interface'
-import { type AIProviderConfig } from '@/types/ai'
 import { OpenAIProvider } from './openai.provider'
 import { GeminiProvider } from './gemini.provider'
 import { aiCache } from './cache'
@@ -13,8 +12,12 @@ function detectProvider(): AIProvider {
   if (process.env.OPENAI_API_KEY) {
     return new OpenAIProvider()
   }
-  // Default to Gemini (will fail at runtime if not configured)
   return new GeminiProvider()
+}
+
+interface AIProviderConfig {
+  type?: string
+  model?: string
 }
 
 export function getAIProvider(config?: AIProviderConfig): AIProvider {

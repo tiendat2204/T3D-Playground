@@ -1,23 +1,36 @@
 import { NextResponse } from 'next/server'
-import { getDefaultProvider, aiCache } from '@/services/ai'
+import { getDefaultProvider, getAIProvider, aiCache } from '@/services/ai'
 
 export async function POST(request: Request) {
   try {
     const body = await request.json()
-    const { url, goal, role, destructiveAllowed } = body
+    const { url, goal, role, destructiveAllowed, apiKey, provider, model } = body
 
     if (!url || !goal) {
       return NextResponse.json({ error: 'url and goal are required' }, { status: 400 })
     }
 
-    const cacheKey = `plan:${url}:${goal}:${role || 'user'}`
+    const cacheKey = `plan:${url}:${goal}:${role || 'user'}:${provider || 'default'}`
     const cached = await aiCache.get(cacheKey)
     if (cached) {
       return NextResponse.json({ data: cached })
     }
 
-    const provider = getDefaultProvider()
-    const testPlan = await provider.generateTestPlan({
+    // Set API key in environment for the provider to use
+    if (apiKey && provider === 'gemini') {
+      process.env.GOOGLE_GENERATIVE_AI_API_KEY = apiKey
+    } else if (apiKey && provider === 'openai') {
+      process.env.OPENAI_API_KEY = apiKey
+    }
+
+    let aiProvider
+    if (provider) {
+      aiProvider = getAIProvider({ type: provider, model })
+    } else {
+      aiProvider = getDefaultProvider()
+    }
+
+    const testPlan = await aiProvider.generateTestPlan({
       url,
       goal,
       role,
@@ -35,7 +48,7 @@ export async function POST(request: Request) {
 
     if (isQuotaError) {
       return NextResponse.json({
-        error: 'AI API quota exceeded. Please wait a few minutes and try again, or upgrade your API plan.'
+        error: 'AI API quota exceeded. Please wait a few minutes and try again, or switch to a different provider in Settings.'
       }, { status: 429 })
     }
 

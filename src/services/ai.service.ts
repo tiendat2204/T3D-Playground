@@ -44,6 +44,9 @@ export interface GenerateTestPlanInput {
   goal: string
   role?: string
   destructiveAllowed?: boolean
+  apiKey?: string
+  provider?: string
+  model?: string
 }
 
 export interface GenerateCodeInput {

@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, Bot, Check, ChevronDown, Paperclip, Sparkles, Loader2, FolderKanban } from 'lucide-react'
+import { ArrowRight, Bot, Check, ChevronDown, Paperclip, Sparkles, Loader2, FolderKanban, Settings } from 'lucide-react'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
@@ -13,8 +13,10 @@ import {
 } from '@/components/ui/dropdown-menu'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useProjects, useProjectEnvironments } from '@/hooks/use-projects'
+import { useAISettings } from '@/hooks/use-ai-settings'
 import { aiService, type TestPlan } from '@/services/ai.service'
 import { toast } from 'sonner'
+import Link from 'next/link'
 
 interface UseAutoResizeTextareaProps {
   minHeight: number
@@ -84,16 +86,19 @@ export function ChatAI() {
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({ minHeight: 72, maxHeight: 300 })
   const { data: projects } = useProjects()
   const { data: environments } = useProjectEnvironments(selectedProjectId)
+  const { settings, getApiKey, getModel } = useAISettings()
 
   const projectsList = (projects || []) as { id: string; name: string; baseUrl: string }[]
   const environmentsList = (environments || []) as { id: string; name: string; baseUrl: string }[]
   const selectedProject = projectsList.find(p => p.id === selectedProjectId)
 
-  const AI_MODELS = ['Gemini 2.5 Flash', 'Gemini 2.5 Pro']
+  const AI_MODELS = ['Gemini 2.5 Flash', 'Gemini 2.5 Pro', 'GPT-4o', 'GPT-4o Mini']
 
   const MODEL_ICONS: Record<string, React.ReactNode> = {
     'Gemini 2.5 Flash': GEMINI_ICON,
     'Gemini 2.5 Pro': GEMINI_ICON,
+    'GPT-4o': GEMINI_ICON,
+    'GPT-4o Mini': GEMINI_ICON,
   }
 
   useEffect(() => {
@@ -115,11 +120,25 @@ export function ChatAI() {
     setIsGenerating(true)
 
     try {
+      const apiKey = getApiKey()
+      const provider = settings.activeProvider
+      const model = getModel()
+
+      if (!apiKey) {
+        toast.error('No API key configured. Please add one in Settings.')
+        setMessages(prev => [...prev, { role: 'assistant', content: 'No API key configured. Please go to Settings and add your API key.' }])
+        setIsGenerating(false)
+        return
+      }
+
       const result = await aiService.generatePlan({
         projectId: selectedProjectId,
         url: selectedProject?.baseUrl || '',
         goal: userMessage,
-        role: undefined
+        role: undefined,
+        apiKey,
+        provider,
+        model
       })
 
       if (result) {
@@ -182,6 +201,14 @@ export function ChatAI() {
         {selectedProject && (
           <span className="text-xs text-gray-400">{selectedProject.baseUrl}</span>
         )}
+        <div className="ml-auto">
+          <Link href="/settings">
+            <Button variant="ghost" size="sm" className="rounded-none">
+              <Settings className="w-4 h-4 mr-1" />
+              Settings
+            </Button>
+          </Link>
+        </div>
       </div>
 
       {/* Messages Area */}
