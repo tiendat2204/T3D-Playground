@@ -1,10 +1,10 @@
-import { drizzle, type NodePgDatabase } from 'drizzle-orm/node-postgres'
+import { drizzle } from 'drizzle-orm/node-postgres'
 import { Pool } from 'pg'
 import * as schema from './schema'
 
-let _db: NodePgDatabase<typeof schema> | null = null
+let _db: ReturnType<typeof drizzle<typeof schema>> | null = null
 
-export function getDb(): NodePgDatabase<typeof schema> {
+export function getDb() {
   if (!_db) {
     if (!process.env.DATABASE_URL) {
       throw new Error('DATABASE_URL is not configured')
@@ -17,11 +17,11 @@ export function getDb(): NodePgDatabase<typeof schema> {
   return _db
 }
 
-// Lazy proxy that defers connection until first use
-export const db = new Proxy({} as NodePgDatabase<typeof schema>, {
+export const db = new Proxy({} as ReturnType<typeof drizzle<typeof schema>>, {
   get(_target, prop) {
     const instance = getDb()
-    const value = (instance as Record<string | symbol, unknown>)[prop]
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const value = (instance as any)[prop]
     if (typeof value === 'function') {
       return value.bind(instance)
     }

@@ -2,6 +2,7 @@
 
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query'
 import { projectsService, type Project, type CreateProjectInput } from '@/services/projects.service'
+import { environmentsService, type Environment, type CreateEnvironmentInput } from '@/services/environments.service'
 
 export function useProjects() {
   return useQuery({
@@ -15,6 +16,14 @@ export function useProject(id: string) {
     queryKey: ['projects', id],
     queryFn: () => projectsService.get(id),
     enabled: !!id
+  })
+}
+
+export function useProjectEnvironments(projectId: string) {
+  return useQuery({
+    queryKey: ['projects', projectId, 'environments'],
+    queryFn: () => environmentsService.list(projectId),
+    enabled: !!projectId
   })
 }
 
@@ -46,6 +55,17 @@ export function useDeleteProject() {
     mutationFn: (id: string) => projectsService.delete(id),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['projects'] })
+    }
+  })
+}
+
+export function useCreateEnvironment() {
+  const queryClient = useQueryClient()
+  return useMutation({
+    mutationFn: ({ projectId, data }: { projectId: string; data: CreateEnvironmentInput }) =>
+      environmentsService.create(projectId, data),
+    onSuccess: (_, variables) => {
+      queryClient.invalidateQueries({ queryKey: ['projects', variables.projectId, 'environments'] })
     }
   })
 }

@@ -8,10 +8,12 @@
     "build": "next build",
     "start": "next start",
     "lint": "next lint",
-    "db:generate": "drizzle-kit generate",
-    "db:migrate": "drizzle-kit migrate",
-    "db:push": "drizzle-kit push",
-    "db:studio": "drizzle-kit studio"
+    "db:seed": "tsx drizzle/seed.ts",
+    "db:drizzle:generate": "drizzle-kit generate",
+    "db:drizzle:migrate": "drizzle-kit migrate",
+    "db:drizzle:push": "drizzle-kit push",
+    "db:drizzle:pull": "drizzle-kit pull",
+    "db:drizzle:studio": "drizzle-kit studio"
   },
   "dependencies": {
     "@ai-sdk/anthropic": "^1.0.0",

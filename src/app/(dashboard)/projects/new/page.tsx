@@ -3,12 +3,13 @@
 import { useRouter } from 'next/navigation'
 import { useCreateProject } from '@/hooks/use-projects'
 import { ProjectForm } from '@/components/projects/project-form'
+import type { CreateProjectInput } from '@/services/projects.service'
 
 export default function NewProjectPage() {
   const router = useRouter()
   const createProject = useCreateProject()
 
-  const handleSubmit = async (data: unknown) => {
+  const handleSubmit = async (data: CreateProjectInput) => {
     await createProject.mutateAsync(data)
     router.push('/projects')
   }
