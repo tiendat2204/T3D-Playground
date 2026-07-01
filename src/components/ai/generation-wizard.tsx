@@ -78,7 +78,10 @@ export function GenerationWizard() {
     try {
       const testCase = allCases[caseIndex]
       const result = await aiService.generateCode({
-        testCaseId: `temp-${Date.now()}`,
+        title: testCase.title,
+        steps: testCase.steps,
+        expectedResult: testCase.expectedResult,
+        baseUrl: url,
         environmentId
       })
 

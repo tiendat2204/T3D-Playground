@@ -47,8 +47,11 @@ export interface GenerateTestPlanInput {
 }
 
 export interface GenerateCodeInput {
-  testCaseId: string
-  environmentId: string
+  title: string
+  steps?: string[]
+  expectedResult?: string
+  baseUrl: string
+  environmentId?: string
 }
 
 export interface FailureAnalysis {
