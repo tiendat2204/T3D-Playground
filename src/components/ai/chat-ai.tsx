@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowRight, Bot, Check, ChevronDown, Paperclip, Sparkles, Loader2 } from 'lucide-react'
+import { ArrowRight, Bot, Check, ChevronDown, Paperclip, Sparkles, Loader2, FolderKanban } from 'lucide-react'
 import { useState, useRef, useCallback, useEffect } from 'react'
 import { Textarea } from '@/components/ui/textarea'
 import { cn } from '@/lib/utils'
@@ -73,17 +73,12 @@ interface Message {
   testPlan?: TestPlan
 }
 
-interface ChatAIProps {
-  onPlanGenerated?: (plan: TestPlan) => void
-}
-
-export function ChatAI({ onPlanGenerated }: ChatAIProps) {
+export function ChatAI() {
   const [messages, setMessages] = useState<Message[]>([])
   const [value, setValue] = useState('')
   const [isGenerating, setIsGenerating] = useState(false)
   const [selectedModel, setSelectedModel] = useState('Gemini 2.5 Flash')
   const [selectedProjectId, setSelectedProjectId] = useState('')
-  const [selectedEnvironmentId, setSelectedEnvironmentId] = useState('')
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   const { textareaRef, adjustHeight } = useAutoResizeTextarea({ minHeight: 72, maxHeight: 300 })
@@ -92,6 +87,7 @@ export function ChatAI({ onPlanGenerated }: ChatAIProps) {
 
   const projectsList = (projects || []) as { id: string; name: string; baseUrl: string }[]
   const environmentsList = (environments || []) as { id: string; name: string; baseUrl: string }[]
+  const selectedProject = projectsList.find(p => p.id === selectedProjectId)
 
   const AI_MODELS = ['Gemini 2.5 Flash', 'Gemini 2.5 Pro']
 
@@ -106,6 +102,10 @@ export function ChatAI({ onPlanGenerated }: ChatAIProps) {
 
   const handleSend = async () => {
     if (!value.trim() || isGenerating) return
+    if (!selectedProjectId) {
+      toast.error('Please select a project first')
+      return
+    }
 
     const userMessage = value.trim()
     setValue('')
@@ -115,20 +115,18 @@ export function ChatAI({ onPlanGenerated }: ChatAIProps) {
     setIsGenerating(true)
 
     try {
-      const project = projectsList.find(p => p.id === selectedProjectId)
-      const url = project?.baseUrl || userMessage
-
       const result = await aiService.generatePlan({
-        projectId: selectedProjectId || projectsList[0]?.id || '',
-        url,
+        projectId: selectedProjectId,
+        url: selectedProject?.baseUrl || '',
         goal: userMessage,
         role: undefined
       })
 
       if (result) {
-        const assistantMessage = `I've generated a test plan with ${result.testSuites.length} test suites:\n\n${result.testSuites.map(s => `**${s.name}** (${s.priority}) - ${s.cases.length} test cases`).join('\n')}`
+        const suiteCount = result.testSuites.length
+        const caseCount = result.testSuites.reduce((acc, s) => acc + s.cases.length, 0)
+        const assistantMessage = `Test plan generated with ${suiteCount} suites and ${caseCount} test cases.\n\n${result.testSuites.map(s => `**${s.name}**\n${s.cases.map(c => `• ${c.title}`).join('\n')}`).join('\n\n')}`
         setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage, testPlan: result }])
-        onPlanGenerated?.(result)
         toast.success('Test plan generated!')
       } else {
         setMessages(prev => [...prev, { role: 'assistant', content: 'Failed to generate test plan. Please try again.' }])
@@ -149,14 +147,48 @@ export function ChatAI({ onPlanGenerated }: ChatAIProps) {
 
   return (
     <div className="flex flex-col h-full">
+      {/* Project Selector */}
+      <div className="p-4 border-b flex items-center gap-4">
+        <div className="flex items-center gap-2">
+          <FolderKanban className="w-4 h-4 text-gray-500" />
+          <span className="text-sm text-gray-500">Project:</span>
+        </div>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
+            <Button variant="outline" size="sm" className="rounded-none">
+              {selectedProject ? (
+                <span className="flex items-center gap-2">
+                  {selectedProject.name}
+                  <ChevronDown className="w-3 h-3" />
+                </span>
+              ) : (
+                <span className="text-gray-500">Select a project</span>
+              )}
+            </Button>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent className="rounded-none">
+            {projectsList.map(p => (
+              <DropdownMenuItem key={p.id} onSelect={() => setSelectedProjectId(p.id)}>
+                {p.name}
+              </DropdownMenuItem>
+            ))}
+          </DropdownMenuContent>
+        </DropdownMenu>
+        {selectedProject && (
+          <span className="text-xs text-gray-400">{selectedProject.baseUrl}</span>
+        )}
+      </div>
+
       {/* Messages Area */}
       <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {messages.length === 0 ? (
           <div className="flex flex-col items-center justify-center h-full text-center">
             <Sparkles className="w-12 h-12 text-primary mb-4" />
-            <h2 className="text-xl font-semibold mb-2">AI Test Generator</h2>
+            <h2 className="text-xl font-semibold mb-2">AI Test Agent</h2>
             <p className="text-gray-500 dark:text-gray-400 max-w-md">
-              Describe what you want to test, and I'll generate a Playwright test plan for you.
+              {selectedProject
+                ? `Describe what you want to test on ${selectedProject.name}, and I'll generate a Playwright test plan.`
+                : 'Select a project first, then describe what you want to test.'}
             </p>
           </div>
         ) : (
@@ -218,7 +250,7 @@ export function ChatAI({ onPlanGenerated }: ChatAIProps) {
               <div className="overflow-y-auto" style={{ maxHeight: '400px' }}>
                 <Textarea
                   value={value}
-                  placeholder="Describe what you want to test... (e.g., Test login, create product, delete product)"
+                  placeholder={selectedProject ? `Describe what you want to test on ${selectedProject.name}...` : 'Select a project first...'}
                   className={cn(
                     'w-full rounded-none px-4 py-3 bg-transparent border-none dark:text-white placeholder:text-gray-500 dark:placeholder:text-gray-400 resize-none focus-visible:ring-0 focus-visible:ring-offset-0',
                     'min-h-[72px]'
@@ -229,6 +261,7 @@ export function ChatAI({ onPlanGenerated }: ChatAIProps) {
                     setValue(e.target.value)
                     adjustHeight()
                   }}
+                  disabled={!selectedProjectId}
                 />
               </div>
 
@@ -286,13 +319,13 @@ export function ChatAI({ onPlanGenerated }: ChatAIProps) {
                       'hover:bg-gray-400 dark:hover:bg-gray-500',
                       'disabled:opacity-50 disabled:cursor-not-allowed'
                     )}
-                    disabled={!value.trim() || isGenerating}
+                    disabled={!value.trim() || isGenerating || !selectedProjectId}
                     onClick={handleSend}
                   >
                     {isGenerating ? (
                       <Loader2 className="w-4 h-4 animate-spin" />
                     ) : (
-                      <ArrowRight className={cn('w-4 h-4 transition-opacity', value.trim() ? 'opacity-100' : 'opacity-30')} />
+                      <ArrowRight className={cn('w-4 h-4 transition-opacity', value.trim() && selectedProjectId ? 'opacity-100' : 'opacity-30')} />
                     )}
                   </button>
                 </div>
