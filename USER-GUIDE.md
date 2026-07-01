@@ -1,337 +1,337 @@
-# AI Regression Worker - User Guide
+# AI Regression Worker - Hướng Dẫn Sử Dụng
 
-## Overview
+## Tổng Quan
 
-AI Regression Worker is an internal platform that uses AI + Playwright to automate regression testing for websites. The system can:
+AI Regression Worker là nền tảng nội bộ sử dụng AI + Playwright để tự động hóa regression testing cho website. Hệ thống có thể:
 
-- Generate test plans from requirements using AI
-- Generate Playwright test code automatically
-- Execute tests on real browsers
-- Analyze failures with AI
-- Generate bug reports automatically
+- Tạo test plan từ yêu cầu bằng AI
+- Tự động tạo code Playwright
+- Chạy test trên trình duyệt thật
+- Phân tích lỗi bằng AI
+- Tự động tạo bug report
 
 ---
 
-## System Requirements
+## Yêu Cầu Hệ Thống
 
 - Node.js 20+
 - PostgreSQL 15+
-- Redis 7+ (for background test execution)
-- Modern browser (Chrome, Firefox, Edge)
+- Redis 7+ (để chạy test nền)
+- Trình duyệt hiện đại (Chrome, Firefox, Edge)
 
 ---
 
-## Quick Start
+## Bắt Đầu Nhanh
 
-### 1. Access the Platform
+### 1. Truy Cập Hệ Thống
 
-Open browser and go to: `http://localhost:3000`
+Mở trình duyệt và truy cập: `http://localhost:3000`
 
-### 2. Configure AI Provider
+### 2. Cấu Hình AI Provider
 
-1. Go to **Settings** page
-2. Select your AI provider (Gemini or OpenAI)
-3. Enter your API key
-4. Select model
+1. Vào trang **Settings**
+2. Chọn AI provider (Gemini hoặc OpenAI)
+3. Nhập API key
+4. Chọn model
 5. Click **Save Settings**
 
-### 3. Create a Project
+### 3. Tạo Dự Án
 
-1. Go to **Projects** page
+1. Vào trang **Projects**
 2. Click **New Project**
-3. Enter project details:
-   - Project Name
-   - Base URL (e.g., https://staging.example.com)
-   - Description
+3. Nhập thông tin dự án:
+   - Tên dự án
+   - Base URL (ví dụ: https://staging.example.com)
+   - Mô tả
 4. Click **Create Project**
 
-### 4. Add Environment
+### 4. Thêm Environment
 
-1. Go to **Project Detail** page
+1. Vào trang **Project Detail**
 2. Click **Add Environment**
-3. Enter environment details:
-   - Name (e.g., Staging, Production)
+3. Nhập thông tin environment:
+   - Tên (ví dụ: Staging, Production)
    - Base URL
 4. Click **Create**
 
 ---
 
-## Generating Test Plans
+## Tạo Test Plan
 
-### Step 1: Open AI Generate
+### Bước 1: Mở AI Generate
 
-1. Click **AI Generate** in sidebar
-2. Select your project from dropdown
+1. Click **AI Generate** trong sidebar
+2. Chọn dự án từ dropdown
 
-### Step 2: Describe What to Test
+### Bước 2: Mô Tả Cần Test
 
-Type in the chat box what you want to test:
-
-```
-Test login functionality with valid and invalid credentials
-```
-
-or
+Gõ vào hộp chat những gì bạn muốn test:
 
 ```
-Test product management: create, edit, delete products
+Test login với tài khoản hợp lệ và không hợp lệ
 ```
 
-### Step 3: Generate Test Plan
+hoặc
 
-1. Press **Enter** or click the send button
-2. AI will generate a test plan with multiple test suites
-3. Review the generated test cases
+```
+Test quản lý sản phẩm: tạo, chỉnh sửa, xóa sản phẩm
+```
 
-### Step 4: Generate Playwright Code
+### Bước 3: Tạo Test Plan
+
+1. Nhấn **Enter** hoặc click nút gửi
+2. AI sẽ tạo test plan với nhiều test suite
+3. Xem lại các test case đã tạo
+
+### Bước 4: Tạo Code Playwright
 
 1. Click **Continue to Code Generation**
-2. Select a test case from the list
-3. Click the generate button
-4. View the generated Playwright code
-5. Click **Copy** or **Download** to save the code
+2. Chọn một test case từ danh sách
+3. Click nút generate
+4. Xem code Playwright đã tạo
+5. Click **Copy** hoặc **Download** để lưu code
 
 ---
 
-## Running Tests
+## Chạy Test
 
-### Run Single Test
+### Chạy Test Đơn
 
-1. Go to **Test Cases** page
-2. Find the test case you want to run
-3. Click **Run** button
-4. Select an environment
+1. Vào trang **Test Cases**
+2. Tìm test case muốn chạy
+3. Click nút **Run**
+4. Chọn environment
 5. Click **Run Test**
 
-### Run Tests by Tag
+### Chạy Test Theo Tag
 
-1. Go to **Test Cases** page
+1. Vào trang **Test Cases**
 2. Click **Run by Tag**
-3. Select project
-4. Select environment
-5. Select tags (e.g., @smoke, @regression)
+3. Chọn dự án
+4. Chọn environment
+5. Chọn tags (ví dụ: @smoke, @regression)
 6. Click **Run Tests**
 
-### Run All Tests for a Project
+### Chạy Tất Cả Test Của Dự Án
 
-1. Go to **Project Detail** page
+1. Vào trang **Project Detail**
 2. Click **Run All Tests**
-3. Select environment
-4. Select tags (optional)
+3. Chọn environment
+4. Chọn tags (tùy chọn)
 5. Click **Run Tests**
 
 ---
 
-## Viewing Test Results
+## Xem Kết Quả Test
 
-### Test Run List
+### Danh Sách Test Run
 
-1. Go to **Test Runs** page
-2. View all test runs with status:
-   - 🟢 **Passed** - All tests passed
-   - 🔴 **Failed** - One or more tests failed
-   - 🟡 **Running** - Tests are currently executing
-   - ⚪ **Queued** - Tests waiting to start
+1. Vào trang **Test Runs**
+2. Xem tất cả test run với trạng thái:
+   - 🟢 **Passed** - Tất cả test pass
+   - 🔴 **Failed** - Có test bị fail
+   - 🟡 **Running** - Test đang chạy
+   - ⚪ **Queued** - Test đang chờ chạy
 
-### Test Run Detail
+### Chi Tiết Test Run
 
-1. Click on a test run to view details
-2. See summary:
-   - Total tests
-   - Passed count
-   - Failed count
-   - Duration
-3. View individual test results:
-   - Test case name
-   - Status (passed/failed/error)
-   - Duration
-   - Error message (if failed)
+1. Click vào test run để xem chi tiết
+2. Xem tổng quan:
+   - Tổng số test
+   - Số lượng pass
+   - Số lượng fail
+   - Thời gian chạy
+3. Xem kết quả từng test:
+   - Tên test case
+   - Trạng thái (passed/failed/error)
+   - Thời gian
+   - Thông báo lỗi (nếu failed)
 
-### Re-run Failed Tests
+### Chạy Lại Test Fail
 
-1. Go to a failed test run detail
+1. V vào chi tiết test run bị fail
 2. Click **Re-run Failed**
-3. Only failed tests will be re-executed
+3. Chỉ các test fail mới được chạy lại
 
 ---
 
-## Analyzing Failures
+## Phân Tích Lỗi
 
-### AI Failure Analysis
+### Phân Tích Lỗi Bằng AI
 
-1. Go to a failed test run detail
-2. Find the failed test result
+1. Vào chi tiết test run bị fail
+2. Tìm kết quả test bị fail
 3. Click **Analyze Failure**
-4. AI will analyze the failure and provide:
-   - Root cause
-   - Confidence score
-   - Issue type (product bug / test bug)
-   - Suggested fix
-5. A bug report will be automatically created
+4. AI sẽ phân tích lỗi và cung cấp:
+   - Nguyên nhân gốc
+   - Điểm tin cậy
+   - Loại vấn đề (product bug / test bug)
+   - Gợi ý sửa
+5. Bug report sẽ tự động được tạo
 
-### View AI Analysis
+### Xem Phân Tích AI
 
-1. Go to failed test result
-2. Scroll to **AI Analysis** section
-3. Review the analysis:
-   - **Root Cause**: What went wrong
-   - **Confidence**: How sure AI is (0-100%)
-   - **Type**: Whether it's a product bug or test issue
-   - **Suggested Fix**: How to fix the issue
+1. Vào kết quả test fail
+2. Kéo xuống phần **AI Analysis**
+3. Xem phân tích:
+   - **Root Cause**: Điều gì đã xảy ra
+   - **Confidence**: Mức độ tin cậy của AI (0-100%)
+   - **Type**: Đây là product bug hay test issue
+   - **Suggested Fix**: Cách sửa lỗi
 
 ---
 
 ## Bug Reports
 
-### View Bug Reports
+### Xem Bug Reports
 
-1. Go to **Bug Reports** page
-2. View list of all bug reports
-3. Filter by status (open, in-progress, resolved, closed)
+1. Vào trang **Bug Reports**
+2. Xem danh sách tất cả bug reports
+3. Lọc theo trạng thái (open, in-progress, resolved, closed)
 
-### Create Bug Report Manually
+### Tạo Bug Report Thủ Công
 
-1. Go to **Bug Reports** page
+1. Vào trang **Bug Reports**
 2. Click **Create Bug Report**
-3. Fill in details:
-   - Title
-   - Steps to reproduce
-   - Expected result
-   - Actual result
+3. Nhập thông tin:
+   - Tiêu đề
+   - Các bước tái hiện
+   - Kết quả mong đợi
+   - Kết quả thực tế
 4. Click **Create**
 
-### Auto-Created Bug Reports
+### Bug Report Tự Động
 
-When AI analyzes a failure and determines it's a product bug, a bug report is automatically created with:
-- Title from AI analysis
-- Steps to reproduce
-- Expected vs actual results
-- AI analysis summary
+Khi AI phân tích lỗi và xác định đây là product bug, bug report sẽ tự động được tạo với:
+- Tiêu đề từ phân tích AI
+- Các bước tái hiện
+- Kết quả mong đợi vs thực tế
+- Tóm tắt phân tích AI
 
 ---
 
-## Test Case Management
+## Quản Lý Test Case
 
-### View Test Cases
+### Xem Test Cases
 
-1. Go to **Test Cases** page
-2. View all test cases with:
-   - Title
-   - Status (draft/approved/disabled)
-   - Project name
+1. Vào trang **Test Cases**
+2. Xem tất cả test cases với:
+   - Tiêu đề
+   - Trạng thái (draft/approved/disabled)
+   - Tên dự án
    - Tags
 
-### Filter by Tag
+### Lọc Theo Tag
 
-1. Use the tag filter dropdown
-2. Select a tag to filter test cases
-3. Click **Clear filter** to show all
+1. Sử dụng dropdown lọc tag
+2. Chọn tag để lọc test cases
+3. Click **Clear filter** để hiển thị tất cả
 
-### Approve Test Cases
+### Duyệt Test Cases
 
-1. Go to **Test Cases** page
-2. Find the test case
-3. Click the menu (...)
-4. Select **Approve**
+1. Vào trang **Test Cases**
+2. Tìm test case
+3. Click menu (...)
+4. Chọn **Approve**
 
-### Disable Test Cases
+### Vô Hiệu Hóa Test Cases
 
-1. Go to **Test Cases** page
-2. Find the test case
-3. Click the menu (...)
-4. Select **Disable**
+1. Vào trang **Test Cases**
+2. Tìm test case
+3. Click menu (...)
+4. Chọn **Disable**
 
 ---
 
-## Settings
+## Cài Đặt
 
-### Change AI Provider
+### Đổi AI Provider
 
-1. Go to **Settings** page
-2. Select provider (Gemini or OpenAI)
-3. Enter API key
-4. Select model
+1. Vào trang **Settings**
+2. Chọn provider (Gemini hoặc OpenAI)
+3. Nhập API key
+4. Chọn model
 5. Click **Save Settings**
 
-### API Key Security
+### Bảo Mật API Key
 
-- API keys are stored in your browser's local storage
-- Keys are sent to the server only when generating tests
-- Keys are never stored in the database
-- Clear browser data to remove keys
+- API key được lưu trong local storage của trình duyệt
+- Key chỉ được gửi đến server khi tạo test
+- Key không bao giờ được lưu trong database
+- Xóa dữ liệu trình duyệt để xóa key
 
 ---
 
 ## Dashboard
 
-The dashboard shows:
+Dashboard hiển thị:
 
-- **Total Projects**: Number of projects
-- **Test Cases**: Number of test cases
-- **Pass Rate**: Percentage of passing tests
-- **Fail Rate**: Percentage of failing tests
-- **Pass/Fail Chart**: Visual distribution
-- **Recent Runs**: Latest test executions
+- **Total Projects**: Số lượng dự án
+- **Test Cases**: Số lượng test case
+- **Tỷ Lệ Pass**: Phần trăm test pass
+- **Tỷ Lệ Fail**: Phần trăm test fail
+- **Biểu Đồ Pass/Fail**: Phân bố trực quan
+- **Test Run Gần Đây**: Các lần chạy test mới nhất
 
 ---
 
-## Troubleshooting
+## Xử Lý Sự Cố
 
 ### "AI API quota exceeded"
 
-- Wait a few minutes and try again
-- Or switch to a different provider in Settings
-- Or upgrade your API plan
+- Đợi vài phút và thử lại
+- Hoặc chuyển sang provider khác trong Settings
+- Hoặc nâng cấp gói API
 
 ### "No environment found"
 
-- Go to Project Detail
-- Add an environment first
-- Then try running tests again
+- Vào Project Detail
+- Thêm environment trước
+- Sau đó thử chạy test lại
 
-### Tests not executing
+### Test không chạy
 
-- Ensure Redis is running
-- Ensure worker process is started (`pnpm dev:worker`)
-- Check test run status in Test Runs page
+- Đảm bảo Redis đang chạy
+- Đảm bảo worker process đã start (`pnpm dev:worker`)
+- Kiểm tra trạng thái test run trong trang Test Runs
 
 ### "Failed to generate test plan"
 
-- Check your API key in Settings
-- Ensure you have internet connection
-- Try a simpler test goal
+- Kiểm tra API key trong Settings
+- Đảm bảo có kết nối internet
+- Thử lại với mục tiêu test đơn giản hơn
 
 ---
 
-## Keyboard Shortcuts
+## Phím Tắt
 
-| Action | Shortcut |
-|--------|----------|
-| Send message (in AI chat) | Enter |
-| New line (in AI chat) | Shift + Enter |
-
----
-
-## Tips for QC Team
-
-1. **Start with Smoke Tests**: Generate @smoke tests first for critical paths
-
-2. **Use Descriptive Goals**: Be specific when describing what to test
-   - Good: "Test login with valid admin credentials"
-   - Bad: "Test login"
-
-3. **Review Generated Code**: Always review AI-generated Playwright code before running
-
-4. **Check Environment**: Ensure environment URL is correct before running tests
-
-5. **Use Tags**: Organize tests with tags for easy filtering and batch runs
-
-6. **Analyze Failures**: Use AI analysis to understand why tests failed
-
-7. **Track Bug Reports**: Bug reports are auto-created from AI analysis - review and update status
+| Hành Động | Phím Tắt |
+|-----------|----------|
+| Gửi tin nhắn (trong AI chat) | Enter |
+| Xuống dòng (trong AI chat) | Shift + Enter |
 
 ---
 
-## Support
+## Mẹo Cho Đội QC
 
-For issues or questions, contact the development team.
+1. **Bắt Đầu Với Smoke Tests**: Tạo @smoke tests trước cho các đường dẫn quan trọng
+
+2. **Sử Dụng Mô Tả Rõ Ràng**: Cụ thể khi mô tả những gì cần test
+   - Tốt: "Test login với tài khoản admin hợp lệ"
+   - Không tốt: "Test login"
+
+3. **Kiểm Tra Code Được Tạo**: Luôn xem lại code Playwright do AI tạo trước khi chạy
+
+4. **Kiểm Tra Environment**: Đảm bảo URL environment chính xác trước khi chạy test
+
+5. **Sử Dụng Tags**: Tổ chức test bằng tags để dễ lọc và chạy hàng loạt
+
+6. **Phân Tích Lỗi**: Sử dụng phân tích AI để hiểu tại sao test fail
+
+7. **Theo Dõi Bug Reports**: Bug reports được tự động tạo từ phân tích AI - xem và cập nhật trạng thái
+
+---
+
+## Hỗ Trợ
+
+Liên hệ đội ngũ phát triển nếu gặp sự cố hoặc có thắc mắc.
