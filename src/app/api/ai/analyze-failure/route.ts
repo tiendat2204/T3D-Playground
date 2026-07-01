@@ -1,8 +1,9 @@
 import { NextResponse } from 'next/server'
 import { getDefaultProvider } from '@/services/ai'
 import { db } from '@/db'
-import { testRunResults, testCases } from '@/db/schema'
+import { testRunResults, testCases, testRuns, bugReports } from '@/db/schema'
 import { eq } from 'drizzle-orm'
+import { generateId } from '@/lib/utils'
 
 export async function POST(request: Request) {
   if (!process.env.DATABASE_URL) {
@@ -29,6 +30,10 @@ export async function POST(request: Request) {
       where: eq(testCases.id, result.testCaseId)
     })
 
+    const testRun = await db.query.testRuns.findFirst({
+      where: eq(testRuns.id, result.testRunId)
+    })
+
     const provider = getDefaultProvider()
     const analysis = await provider.analyzeFailure({
       testCode: testCase?.generatedCode || '',
@@ -46,6 +51,33 @@ export async function POST(request: Request) {
         suggestedFix: analysis.suggestedFix
       }
     }).where(eq(testRunResults.id, testRunResultId))
+
+    if (analysis.bugReport && testRun) {
+      const existingBugReport = await db.query.bugReports.findFirst({
+        where: eq(bugReports.testRunResultId, testRunResultId)
+      })
+
+      if (!existingBugReport) {
+        await db.insert(bugReports).values({
+          id: generateId(),
+          projectId: testRun.projectId,
+          testRunResultId,
+          title: analysis.bugReport.title,
+          stepsToReproduce: analysis.bugReport.stepsToReproduce,
+          expectedResult: analysis.bugReport.expectedResult,
+          actualResult: analysis.bugReport.actualResult,
+          evidence: {
+            consoleLogs: result.consoleLogs as string[] | undefined,
+            screenshotUrl: result.screenshotUrl || undefined,
+            videoUrl: result.videoUrl || undefined,
+            traceUrl: result.traceUrl || undefined
+          },
+          aiAnalysis: analysis.bugReport.aiAnalysis,
+          status: 'open',
+          updatedAt: new Date()
+        })
+      }
+    }
 
     return NextResponse.json({ data: analysis })
   } catch (error) {

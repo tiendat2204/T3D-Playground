@@ -4,6 +4,7 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTestCases } from '@/hooks/use-test-cases'
+import { useProjects } from '@/hooks/use-projects'
 import { useCreateTestRun } from '@/hooks/use-test-runs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -13,9 +14,11 @@ import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, D
 import { TestTube, Plus, Play, Loader2, Filter } from 'lucide-react'
 import { toast } from 'sonner'
 import type { TestCase } from '@/services/test-cases.service'
+import type { Project } from '@/services/projects.service'
 
 export default function TestCasesPage() {
   const { data: testCases, isLoading } = useTestCases()
+  const { data: projects } = useProjects()
   const createTestRun = useCreateTestRun()
   const router = useRouter()
 
@@ -24,6 +27,15 @@ export default function TestCasesPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [selectedEnvId, setSelectedEnvId] = useState<string>('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+
+  const projectsList = (projects || []) as Project[]
+  const projectMap = useMemo(() => {
+    const map = new Map<string, string>()
+    projectsList.forEach((p) => map.set(p.id, p.name))
+    return map
+  }, [projectsList])
+
+  const getProjectName = (projectId: string) => projectMap.get(projectId) || projectId
 
   const allTags = useMemo(() => {
     if (!testCases) return []
@@ -39,17 +51,6 @@ export default function TestCasesPage() {
     if (tagFilter === 'all') return testCases
     return testCases.filter((tc: TestCase) => tc.tags?.includes(tagFilter))
   }, [testCases, tagFilter])
-
-  const projects = useMemo(() => {
-    if (!testCases) return []
-    const projectMap = new Map<string, { id: string; name: string }>()
-    testCases.forEach((tc: TestCase) => {
-      if (tc.projectId && !projectMap.has(tc.projectId)) {
-        projectMap.set(tc.projectId, { id: tc.projectId, name: tc.projectId })
-      }
-    })
-    return Array.from(projectMap.values())
-  }, [testCases])
 
   const handleRunSingleTest = async (testCase: TestCase) => {
     if (!testCase.projectId) {
@@ -104,7 +105,7 @@ export default function TestCasesPage() {
       <div className="flex items-center justify-between">
         <div>
           <h1 className="text-2xl font-bold">Test Cases</h1>
-          <p className="text-gray-600">Manage your test cases</p>
+          <p className="text-gray-600 dark:text-gray-400">Manage your test cases</p>
         </div>
         <div className="flex items-center gap-2">
           <Dialog open={runDialogOpen} onOpenChange={setRunDialogOpen}>
@@ -129,7 +130,7 @@ export default function TestCasesPage() {
                       <SelectValue placeholder="Select project" />
                     </SelectTrigger>
                     <SelectContent>
-                      {projects.map((p) => (
+                      {projectsList.map((p) => (
                         <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
                       ))}
                     </SelectContent>
@@ -154,7 +155,7 @@ export default function TestCasesPage() {
                     ))}
                   </div>
                   {allTags.length === 0 && (
-                    <p className="text-sm text-gray-500">No tags available</p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">No tags available</p>
                   )}
                 </div>
               </div>
@@ -180,7 +181,7 @@ export default function TestCasesPage() {
 
       <div className="flex items-center gap-4">
         <div className="flex items-center gap-2">
-          <Filter className="w-4 h-4 text-gray-500" />
+          <Filter className="w-4 h-4 text-gray-500 dark:text-gray-400" />
           <span className="text-sm font-medium">Filter by tag:</span>
         </div>
         <Select value={tagFilter} onValueChange={setTagFilter}>
@@ -202,15 +203,15 @@ export default function TestCasesPage() {
       </div>
 
       {isLoading ? (
-        <div className="text-center py-8">Loading...</div>
+        <div className="text-center py-8 dark:text-gray-300">Loading...</div>
       ) : !filteredTestCases || filteredTestCases.length === 0 ? (
         <Card>
           <CardContent className="py-12 text-center">
             <TestTube className="w-12 h-12 mx-auto text-gray-400 mb-4" />
-            <p className="text-gray-500">
+            <p className="text-gray-500 dark:text-gray-400">
               {tagFilter !== 'all' ? 'No test cases with this tag' : 'No test cases yet'}
             </p>
-            <p className="text-sm text-gray-400 mt-2">Use AI Generate to create your first test case</p>
+            <p className="text-sm text-gray-400 dark:text-gray-500 mt-2">Use AI Generate to create your first test case</p>
           </CardContent>
         </Card>
       ) : (
@@ -237,11 +238,16 @@ export default function TestCasesPage() {
                 </div>
               </CardHeader>
               <CardContent>
-                <p className="text-sm text-gray-600">{tc.description || 'No description'}</p>
-                <div className="flex gap-2 mt-3">
-                  {tc.tags?.map((tag: string) => (
-                    <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
-                  ))}
+                <p className="text-sm text-gray-600 dark:text-gray-400">{tc.description || 'No description'}</p>
+                <div className="flex items-center gap-2 mt-3">
+                  <span className="text-xs text-gray-500 dark:text-gray-400">
+                    Project: {getProjectName(tc.projectId)}
+                  </span>
+                  <div className="flex gap-2 ml-auto">
+                    {tc.tags?.map((tag: string) => (
+                      <Badge key={tag} variant="outline" className="text-xs">{tag}</Badge>
+                    ))}
+                  </div>
                 </div>
               </CardContent>
             </Card>

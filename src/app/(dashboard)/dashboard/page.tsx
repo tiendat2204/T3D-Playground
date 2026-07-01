@@ -5,6 +5,7 @@ import { useTestCases } from '@/hooks/use-test-cases'
 import { useTestRuns } from '@/hooks/use-test-runs'
 import { MetricsCards } from '@/components/dashboard/metrics-cards'
 import { RecentRuns } from '@/components/dashboard/recent-runs'
+import { PassFailChart } from '@/components/dashboard/pass-fail-chart'
 
 export default function DashboardPage() {
   const { data: projects } = useProjects()
@@ -27,7 +28,7 @@ export default function DashboardPage() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <p className="text-gray-600">Overview of your testing platform</p>
+        <p className="text-gray-600 dark:text-gray-400">Overview of your testing platform</p>
       </div>
 
       <MetricsCards
@@ -38,6 +39,7 @@ export default function DashboardPage() {
       />
 
       <div className="grid gap-6 md:grid-cols-2">
+        <PassFailChart />
         <RecentRuns />
       </div>
     </div>

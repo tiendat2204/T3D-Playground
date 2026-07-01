@@ -43,31 +43,31 @@ export function RecentRuns() {
 
   if (isLoading) {
     return (
-      <div className="bg-white rounded-lg border p-4">
-        <p className="text-gray-500 text-center">Loading...</p>
+      <div className="bg-white dark:bg-gray-900 rounded-lg border dark:border-gray-700 p-4">
+        <p className="text-gray-500 dark:text-gray-400 text-center">Loading...</p>
       </div>
     )
   }
 
   if (runs.length === 0) {
     return (
-      <div className="bg-white rounded-lg border p-4">
-        <p className="text-gray-500 text-center">No recent runs</p>
+      <div className="bg-white dark:bg-gray-900 rounded-lg border dark:border-gray-700 p-4">
+        <p className="text-gray-500 dark:text-gray-400 text-center">No recent runs</p>
       </div>
     )
   }
 
   return (
-    <div className="bg-white rounded-lg border">
-      <div className="p-4 border-b">
+    <div className="bg-white dark:bg-gray-900 rounded-lg border dark:border-gray-700">
+      <div className="p-4 border-b dark:border-gray-700">
         <h3 className="font-semibold">Recent Runs</h3>
       </div>
-      <div className="divide-y">
+      <div className="divide-y dark:divide-gray-700">
         {runs.map((run) => (
           <Link
             key={run.id}
             href={`/test-runs/${run.id}`}
-            className="flex items-center gap-3 p-4 hover:bg-gray-50 transition-colors"
+            className="flex items-center gap-3 p-4 hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
           >
             {getStatusIcon(run.status)}
             <div className="flex-1 min-w-0">
@@ -77,15 +77,15 @@ export function RecentRuns() {
                   {run.status}
                 </Badge>
               </div>
-              <p className="text-xs text-gray-500 mt-0.5">
+              <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
                 {run.runType} &middot; {formatDate(run.createdAt)}
               </p>
             </div>
             {run.summary && (
-              <div className="text-right text-xs text-gray-500">
-                <span className="text-green-600">{run.summary.passed}</span>
+              <div className="text-right text-xs text-gray-500 dark:text-gray-400">
+                <span className="text-green-600 dark:text-green-400">{run.summary.passed}</span>
                 /
-                <span className="text-red-600">{run.summary.failed}</span>
+                <span className="text-red-600 dark:text-red-400">{run.summary.failed}</span>
                 /
                 <span>{run.summary.total}</span>
               </div>
