@@ -43,6 +43,18 @@ const failureAnalysisSchema = z.object({
   })
 })
 
+function getApiKey(): string {
+  const apiKey = process.env.GOOGLE_GENERATIVE_AI_API_KEY
+  if (!apiKey) {
+    throw new Error(
+      'GOOGLE_GENERATIVE_AI_API_KEY is not set. ' +
+      'Get a key from https://aistudio.google.com/apikey ' +
+      'and add it to .env file.'
+    )
+  }
+  return apiKey
+}
+
 export class GeminiProvider implements AIProvider {
   name = 'gemini'
   private model: string
@@ -52,8 +64,9 @@ export class GeminiProvider implements AIProvider {
   }
 
   async generateTestPlan(params: GenerateTestPlanParams): Promise<TestPlan> {
+    const apiKey = getApiKey()
     const { object } = await generateObject({
-      model: google(this.model),
+      model: google(this.model, { apiKey }),
       schema: testPlanSchema,
       system: getTestPlanSystemPrompt(),
       prompt: `Create a Playwright test plan for:\nURL: ${params.url}\nGoal: ${params.goal}\nRole: ${params.role || 'User'}\nDestructive actions allowed: ${params.destructiveAllowed ? 'Yes' : 'No'}`
@@ -62,9 +75,10 @@ export class GeminiProvider implements AIProvider {
   }
 
   async generatePlaywrightCode(params: GenerateCodeParams): Promise<string> {
+    const apiKey = getApiKey()
     const prompt = getCodeGenerationPrompt(params)
     const { object } = await generateObject({
-      model: google(this.model),
+      model: google(this.model, { apiKey }),
       schema: z.object({ code: z.string() }),
       system: 'You are a senior Playwright TypeScript engineer. Generate only valid TypeScript code.',
       prompt
@@ -73,9 +87,10 @@ export class GeminiProvider implements AIProvider {
   }
 
   async analyzeFailure(params: AnalyzeFailureParams): Promise<FailureAnalysis> {
+    const apiKey = getApiKey()
     const prompt = getFailureAnalysisPrompt(params)
     const { object } = await generateObject({
-      model: google(this.model),
+      model: google(this.model, { apiKey }),
       schema: failureAnalysisSchema,
       system: 'You are a QA automation debugging assistant.',
       prompt
