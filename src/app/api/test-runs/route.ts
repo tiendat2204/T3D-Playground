@@ -6,69 +6,91 @@ import { generateId } from '@/lib/utils'
 import { testRunQueue } from '@/worker/bullmq.config'
 
 export async function GET(request: Request) {
-  const { searchParams } = new URL(request.url)
-  const projectId = searchParams.get('projectId')
-  const status = searchParams.get('status')
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({ data: [], meta: { page: 1, limit: 0, total: 0, totalPages: 0 } })
+  }
 
-  const conditions = []
-  if (projectId) conditions.push(eq(testRuns.projectId, projectId))
-  if (status) conditions.push(eq(testRuns.status, status as 'queued' | 'running' | 'passed' | 'failed' | 'cancelled'))
+  try {
+    const { searchParams } = new URL(request.url)
+    const projectId = searchParams.get('projectId')
+    const status = searchParams.get('status')
 
-  const results = await db.query.testRuns.findMany({
-    where: conditions.length > 0 ? and(...conditions) : undefined,
-    orderBy: [desc(testRuns.createdAt)],
-    with: {
-      environment: true
-    }
-  })
+    const conditions = []
+    if (projectId) conditions.push(eq(testRuns.projectId, projectId))
+    if (status) conditions.push(eq(testRuns.status, status as 'queued' | 'running' | 'passed' | 'failed' | 'cancelled'))
 
-  return NextResponse.json(results)
+    const results = await db.query.testRuns.findMany({
+      where: conditions.length > 0 ? and(...conditions) : undefined,
+      orderBy: [desc(testRuns.createdAt)],
+      with: {
+        environment: true
+      }
+    })
+
+    return NextResponse.json({ data: results })
+  } catch (error) {
+    console.error('GET /api/test-runs failed:', error)
+    return NextResponse.json({ error: 'Failed to fetch test runs' }, { status: 500 })
+  }
 }
 
 export async function POST(request: Request) {
-  const body = await request.json()
-  const { projectId, environmentId, runType, tags, testCaseIds } = body
-
-  let testCasesToRun = testCaseIds
-
-  if (!testCasesToRun || testCasesToRun.length === 0) {
-    const conditions = [eq(testCases.projectId, projectId), eq(testCases.status, 'approved')]
-
-    if (tags && tags.length > 0) {
-      const allCases = await db.query.testCases.findMany({
-        where: and(...conditions)
-      })
-      testCasesToRun = allCases
-        .filter((tc: { tags?: string[] }) => tags.some((tag: string) => tc.tags?.includes(tag)))
-        .map((tc: { id: string }) => tc.id)
-    } else {
-      const allCases = await db.query.testCases.findMany({
-        where: and(...conditions)
-      })
-      testCasesToRun = allCases.map(tc => tc.id)
-    }
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({ error: 'Database is not configured' }, { status: 503 })
   }
 
-  const testRun = await db.insert(testRuns).values({
-    id: generateId(),
-    projectId,
-    environmentId,
-    runType: runType || 'manual',
-    tags,
-    summary: {
-      total: testCasesToRun.length,
-      passed: 0,
-      failed: 0,
-      skipped: 0,
-      error: 0
+  try {
+    const body = await request.json()
+    const { projectId, environmentId, runType, tags, testCaseIds } = body
+
+    if (!projectId) {
+      return NextResponse.json({ error: 'projectId is required' }, { status: 400 })
     }
-  }).returning()
 
-  await testRunQueue.add('run-tests', {
-    testRunId: testRun[0].id,
-    testCaseIds: testCasesToRun,
-    environmentId
-  })
+    let testCasesToRun = testCaseIds
 
-  return NextResponse.json(testRun[0], { status: 201 })
+    if (!testCasesToRun || testCasesToRun.length === 0) {
+      const conditions = [eq(testCases.projectId, projectId), eq(testCases.status, 'approved')]
+
+      if (tags && tags.length > 0) {
+        const allCases = await db.query.testCases.findMany({
+          where: and(...conditions)
+        })
+        testCasesToRun = allCases
+          .filter((tc: { tags?: string[] }) => tags.some((tag: string) => tc.tags?.includes(tag)))
+          .map((tc: { id: string }) => tc.id)
+      } else {
+        const allCases = await db.query.testCases.findMany({
+          where: and(...conditions)
+        })
+        testCasesToRun = allCases.map(tc => tc.id)
+      }
+    }
+
+    const testRun = await db.insert(testRuns).values({
+      id: generateId(),
+      projectId,
+      environmentId,
+      runType: runType || 'manual',
+      tags,
+      summary: {
+        total: testCasesToRun.length,
+        passed: 0,
+        failed: 0,
+        skipped: 0,
+        error: 0
+      }
+    }).returning()
+
+    await testRunQueue.add('run-tests', {
+      testRunId: testRun[0].id,
+      testCaseIds: testCasesToRun,
+      environmentId
+    })
+
+    return NextResponse.json({ data: testRun[0] }, { status: 201 })
+  } catch (error) {
+    console.error('POST /api/test-runs failed:', error)
+    return NextResponse.json({ error: 'Failed to create test run' }, { status: 500 })
+  }
 }

@@ -7,33 +7,51 @@ export async function GET(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params
-  const bugReport = await db.query.bugReports.findFirst({
-    where: eq(bugReports.id, id)
-  })
-
-  if (!bugReport) {
-    return NextResponse.json({ error: 'Bug report not found' }, { status: 404 })
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({ error: 'Database is not configured' }, { status: 503 })
   }
 
-  return NextResponse.json(bugReport)
+  try {
+    const { id } = await params
+    const bugReport = await db.query.bugReports.findFirst({
+      where: eq(bugReports.id, id)
+    })
+
+    if (!bugReport) {
+      return NextResponse.json({ error: 'Bug report not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({ data: bugReport })
+  } catch (error) {
+    console.error('GET /api/bug-reports/[id] failed:', error)
+    return NextResponse.json({ error: 'Failed to fetch bug report' }, { status: 500 })
+  }
 }
 
 export async function PUT(
   request: Request,
   { params }: { params: Promise<{ id: string }> }
 ) {
-  const { id } = await params
-  const body = await request.json()
-
-  const updated = await db.update(bugReports).set({
-    ...body,
-    updatedAt: new Date()
-  }).where(eq(bugReports.id, id)).returning()
-
-  if (updated.length === 0) {
-    return NextResponse.json({ error: 'Bug report not found' }, { status: 404 })
+  if (!process.env.DATABASE_URL) {
+    return NextResponse.json({ error: 'Database is not configured' }, { status: 503 })
   }
 
-  return NextResponse.json(updated[0])
+  try {
+    const { id } = await params
+    const body = await request.json()
+
+    const updated = await db.update(bugReports).set({
+      ...body,
+      updatedAt: new Date()
+    }).where(eq(bugReports.id, id)).returning()
+
+    if (updated.length === 0) {
+      return NextResponse.json({ error: 'Bug report not found' }, { status: 404 })
+    }
+
+    return NextResponse.json({ data: updated[0] })
+  } catch (error) {
+    console.error('PUT /api/bug-reports/[id] failed:', error)
+    return NextResponse.json({ error: 'Failed to update bug report' }, { status: 500 })
+  }
 }

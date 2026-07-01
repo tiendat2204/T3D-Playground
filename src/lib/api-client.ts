@@ -9,7 +9,14 @@ const apiClient: AxiosInstance = axios.create({
 })
 
 apiClient.interceptors.response.use(
-  response => response.data,
+  response => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const body: any = response.data
+    if (body && typeof body === 'object' && 'data' in body) {
+      return body.data
+    }
+    return body
+  },
   (error: AxiosError<{ error: string }>) => {
     const message = error.response?.data?.error || error.message
     return Promise.reject(new Error(message))
