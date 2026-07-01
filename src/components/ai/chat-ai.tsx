@@ -129,10 +129,15 @@ export function ChatAI() {
         setMessages(prev => [...prev, { role: 'assistant', content: assistantMessage, testPlan: result }])
         toast.success('Test plan generated!')
       } else {
-        setMessages(prev => [...prev, { role: 'assistant', content: 'Failed to generate test plan. Please try again.' }])
+        setMessages(prev => [...prev, { role: 'assistant', content: 'Failed to generate test plan. The AI service may be temporarily unavailable. Please try again in a few minutes.' }])
       }
-    } catch {
-      setMessages(prev => [...prev, { role: 'assistant', content: 'An error occurred. Please try again.' }])
+    } catch (error: unknown) {
+      const errorMessage = error instanceof Error ? error.message : String(error)
+      const isQuotaError = errorMessage.includes('quota') || errorMessage.includes('429')
+      const userMessage = isQuotaError
+        ? 'AI API quota exceeded. Please wait a few minutes and try again, or upgrade your API plan.'
+        : 'An error occurred. Please try again.'
+      setMessages(prev => [...prev, { role: 'assistant', content: userMessage }])
     } finally {
       setIsGenerating(false)
     }

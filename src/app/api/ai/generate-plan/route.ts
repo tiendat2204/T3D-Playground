@@ -27,8 +27,18 @@ export async function POST(request: Request) {
     await aiCache.set(cacheKey, testPlan, 'testPlan')
 
     return NextResponse.json({ data: testPlan })
-  } catch (error) {
+  } catch (error: unknown) {
     console.error('POST /api/ai/generate-plan failed:', error)
+
+    const errorMessage = error instanceof Error ? error.message : String(error)
+    const isQuotaError = errorMessage.includes('quota') || errorMessage.includes('429')
+
+    if (isQuotaError) {
+      return NextResponse.json({
+        error: 'AI API quota exceeded. Please wait a few minutes and try again, or upgrade your API plan.'
+      }, { status: 429 })
+    }
+
     return NextResponse.json({ error: 'Failed to generate test plan' }, { status: 500 })
   }
 }
