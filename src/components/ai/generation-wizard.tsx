@@ -22,7 +22,7 @@ const wizardSchema = z.object({
   url: z.string().url('Must be a valid URL'),
   goal: z.string().min(10, 'Goal must be at least 10 characters'),
   role: z.string().optional(),
-  destructiveAllowed: z.boolean().default(false)
+  destructiveAllowed: z.boolean()
 })
 
 type WizardFormData = z.infer<typeof wizardSchema>
@@ -39,6 +39,9 @@ export function GenerationWizard() {
   const selectedProjectId = watch('projectId')
   const { data: projects } = useProjects()
   const { data: environments } = useProjectEnvironments(selectedProjectId)
+
+  const projectsList = projects as { id: string; name: string }[] | undefined
+  const environmentsList = environments as { id: string; name: string }[] | undefined
 
   const generatePlan = useGenerateTestPlan()
   const generateCode = useGenerateCode()
@@ -79,7 +82,7 @@ export function GenerationWizard() {
                     className="w-full border rounded-md p-2"
                   >
                     <option value="">Select a project</option>
-                    {projects?.map(p => (
+                    {projectsList?.map(p => (
                       <option key={p.id} value={p.id}>{p.name}</option>
                     ))}
                   </select>
@@ -97,7 +100,7 @@ export function GenerationWizard() {
                     disabled={!selectedProjectId}
                   >
                     <option value="">Select an environment</option>
-                    {environments?.map(e => (
+                    {environmentsList?.map(e => (
                       <option key={e.id} value={e.id}>{e.name}</option>
                     ))}
                   </select>

@@ -21,6 +21,9 @@ export default function ProjectDetailPage() {
     return <div className="text-center py-8">Project not found</div>
   }
 
+  const projectData = project as { id: string; name: string; baseUrl: string; description?: string }
+  const environmentsList = environments as { id: string; name: string; baseUrl: string }[] | undefined
+
   return (
     <div className="space-y-6">
       <div className="flex items-center gap-4">
@@ -30,10 +33,10 @@ export default function ProjectDetailPage() {
           </Button>
         </Link>
         <div>
-          <h1 className="text-2xl font-bold">{project.name}</h1>
-          <p className="text-gray-600">{project.baseUrl}</p>
+          <h1 className="text-2xl font-bold">{projectData.name}</h1>
+          <p className="text-gray-600">{projectData.baseUrl}</p>
         </div>
-        <Link href={project.baseUrl} target="_blank">
+        <Link href={projectData.baseUrl} target="_blank">
           <Button variant="outline">
             <ExternalLink className="w-4 h-4 mr-2" />
             Visit Site
@@ -41,10 +44,10 @@ export default function ProjectDetailPage() {
         </Link>
       </div>
 
-      {project.description && (
+      {projectData.description && (
         <Card>
           <CardContent className="pt-6">
-            <p className="text-gray-600">{project.description}</p>
+            <p className="text-gray-600">{projectData.description}</p>
           </CardContent>
         </Card>
       )}
@@ -54,14 +57,14 @@ export default function ProjectDetailPage() {
           <CardTitle>Environments</CardTitle>
         </CardHeader>
         <CardContent>
-          {environments?.length === 0 ? (
+          {environmentsList?.length === 0 ? (
             <p className="text-gray-500">No environments configured</p>
           ) : (
             <div className="space-y-2">
-              {environments?.map((env) => (
+              {environmentsList?.map(env => (
                 <div key={env.id} className="flex items-center justify-between p-2 border rounded">
                   <span>{env.name}</span>
-                  <span className="text-sm text-gray-500">{env.url}</span>
+                  <span className="text-sm text-gray-500">{env.baseUrl}</span>
                 </div>
               ))}
             </div>

@@ -1,7 +1,7 @@
-import axios, { AxiosError } from 'axios'
+import axios, { AxiosError, AxiosInstance } from 'axios'
 import { API_BASE_URL } from './constants'
 
-const apiClient = axios.create({
+const apiClient: AxiosInstance = axios.create({
   baseURL: `${API_BASE_URL}/api`,
   headers: {
     'Content-Type': 'application/json'
@@ -16,7 +16,43 @@ apiClient.interceptors.response.use(
   }
 )
 
-export const api = {
+interface ApiNamespace {
+  list: (params?: Record<string, string>) => Promise<unknown>
+  get: (id: string) => Promise<unknown>
+  create: (data: unknown) => Promise<unknown>
+  update: (id: string, data: unknown) => Promise<unknown>
+  delete: (id: string) => Promise<unknown>
+}
+
+interface Api {
+  projects: ApiNamespace
+  environments: {
+    list: (projectId: string) => Promise<unknown>
+    create: (projectId: string, data: unknown) => Promise<unknown>
+    update: (id: string, data: unknown) => Promise<unknown>
+    delete: (id: string) => Promise<unknown>
+  }
+  modules: {
+    list: (projectId: string) => Promise<unknown>
+    create: (projectId: string, data: unknown) => Promise<unknown>
+  }
+  testCases: Pick<ApiNamespace, 'list' | 'get' | 'create' | 'update'> & {
+    approve: (id: string) => Promise<unknown>
+    disable: (id: string) => Promise<unknown>
+  }
+  testRuns: Pick<ApiNamespace, 'list' | 'get' | 'create'> & {
+    cancel: (id: string) => Promise<unknown>
+  }
+  ai: {
+    generatePlan: (data: unknown) => Promise<unknown>
+    generateCode: (data: unknown) => Promise<unknown>
+    analyzeFailure: (data: unknown) => Promise<unknown>
+    suggestPatch: (data: unknown) => Promise<unknown>
+  }
+  bugReports: Pick<ApiNamespace, 'list' | 'get' | 'create' | 'update'>
+}
+
+export const api: Api = {
   projects: {
     list: () => apiClient.get('/projects'),
     get: (id: string) => apiClient.get(`/projects/${id}`),

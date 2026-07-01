@@ -10,10 +10,14 @@ export default function DashboardPage() {
   const { data: testCases } = useTestCases()
   const { data: testRuns } = useTestRuns()
 
-  const totalProjects = projects?.length || 0
-  const totalTestCases = testCases?.length || 0
+  const projectsList = projects as { id: string; name: string }[] | undefined
+  const testCasesList = testCases as { id: string; title: string }[] | undefined
+  const testRunsList = testRuns as { id: string; status: string }[] | undefined
 
-  const completedRuns = testRuns?.filter(r => r.status === 'passed' || r.status === 'failed') || []
+  const totalProjects = projectsList?.length || 0
+  const totalTestCases = testCasesList?.length || 0
+
+  const completedRuns = testRunsList?.filter(r => r.status === 'passed' || r.status === 'failed') || []
   const passedRuns = completedRuns.filter(r => r.status === 'passed')
   const passRate = completedRuns.length > 0 ? Math.round((passedRuns.length / completedRuns.length) * 100) : 0
   const failRate = 100 - passRate

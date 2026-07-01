@@ -39,8 +39,8 @@ export async function POST(request: Request) {
         where: and(...conditions)
       })
       testCasesToRun = allCases
-        .filter(tc => tags.some(tag => tc.tags?.includes(tag)))
-        .map(tc => tc.id)
+        .filter((tc: { tags?: string[] }) => tags.some((tag: string) => tc.tags?.includes(tag)))
+        .map((tc: { id: string }) => tc.id)
     } else {
       const allCases = await db.query.testCases.findMany({
         where: and(...conditions)

@@ -1,4 +1,4 @@
-import { Redis } from 'redis'
+import { createClient, type RedisClientType } from 'redis'
 import { type CachedAIResult } from '@/types/ai'
 
 const TTL_SECONDS = {
@@ -8,11 +8,13 @@ const TTL_SECONDS = {
 }
 
 export class AICache {
-  private redis: Redis | null = null
+  private redis: RedisClientType | null = null
   private prefix = 'ai-cache:'
 
   async connect() {
-    this.redis = Redis.fromUrl(process.env.REDIS_URL || 'redis://localhost:6379')
+    this.redis = createClient({
+      url: process.env.REDIS_URL || 'redis://localhost:6379'
+    })
     await this.redis.connect()
   }
 

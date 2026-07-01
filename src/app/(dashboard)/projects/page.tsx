@@ -8,6 +8,7 @@ import { Plus } from 'lucide-react'
 
 export default function ProjectsPage() {
   const { data: projects, isLoading } = useProjects()
+  const projectsList = projects as { id: string; name: string; baseUrl: string; description?: string }[] | undefined
 
   return (
     <div className="space-y-6">
@@ -26,7 +27,7 @@ export default function ProjectsPage() {
 
       {isLoading ? (
         <div className="text-center py-8">Loading...</div>
-      ) : projects?.length === 0 ? (
+      ) : projectsList?.length === 0 ? (
         <div className="text-center py-12 bg-white rounded-lg border">
           <p className="text-gray-500">No projects yet</p>
           <Link href="/projects/new">
@@ -35,7 +36,7 @@ export default function ProjectsPage() {
         </div>
       ) : (
         <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3">
-          {projects?.map((project) => (
+          {projectsList?.map(project => (
             <ProjectCard
               key={project.id}
               id={project.id}

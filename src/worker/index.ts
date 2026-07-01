@@ -11,8 +11,8 @@ interface TestRunJobData {
   environmentId: string
 }
 
-async function processTestRunJob(data: TestRunJobData) {
-  const { testRunId, testCaseIds, environmentId } = data
+async function processTestRunJob(data: unknown) {
+  const { testRunId, testCaseIds, environmentId } = data as TestRunJobData
 
   await db.update(testRuns).set({
     status: 'running',

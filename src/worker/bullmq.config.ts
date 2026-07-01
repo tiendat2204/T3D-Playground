@@ -1,14 +1,16 @@
 import { Queue, Worker } from 'bullmq'
 import IORedis from 'ioredis'
 
-const connection = new IORedis(process.env.REDIS_URL || 'redis://localhost:6379', {
-  maxRetriesPerRequest: null
-})
+const REDIS_URL = process.env.REDIS_URL || 'redis://localhost:6379'
 
-export const testRunQueue = new Queue('test-runs', { connection })
+export const testRunQueue = new Queue('test-runs', {
+  connection: new IORedis(REDIS_URL, { maxRetriesPerRequest: null }) as any
+})
 
 export function createTestRunWorker(processor: (jobData: unknown) => Promise<void>) {
   return new Worker('test-runs', async job => {
     await processor(job.data)
-  }, { connection })
+  }, {
+    connection: new IORedis(REDIS_URL, { maxRetriesPerRequest: null }) as any
+  })
 }
