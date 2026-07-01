@@ -7,13 +7,13 @@ import { aiCache } from './cache'
 let defaultProvider: AIProvider | null = null
 
 function detectProvider(): AIProvider {
-  if (process.env.GEMINI_API_KEY) {
+  if (process.env.GOOGLE_GENERATIVE_AI_API_KEY) {
     return new GeminiProvider()
   }
   if (process.env.OPENAI_API_KEY) {
     return new OpenAIProvider()
   }
-  // Default to Gemini with a placeholder key (will fail at runtime if not configured)
+  // Default to Gemini (will fail at runtime if not configured)
   return new GeminiProvider()
 }
 
