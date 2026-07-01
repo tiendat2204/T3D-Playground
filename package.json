@@ -40,6 +40,7 @@
     "clsx": "^2.1.1",
     "date-fns": "^4.1.0",
     "drizzle-orm": "^0.45.1",
+    "framer-motion": "^12.42.2",
     "immer": "^11.1.8",
     "ioredis": "^5.11.1",
     "lucide-react": "^0.554.0",
