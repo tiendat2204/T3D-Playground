@@ -1,5 +1,7 @@
-import { Sidebar } from '@/components/layout/sidebar'
-import { Header } from '@/components/layout/header'
+import { SidebarProvider } from '@/components/ui/sidebar'
+import { AdminSidebar } from '@/layouts/admin/admin-sidebar'
+import { AdminContent } from '@/layouts/admin/admin-content'
+import { SidebarProvider as SidebarCookieProvider } from '@/layouts/admin/sidebar-provider'
 
 export default function DashboardLayout({
   children
@@ -7,14 +9,13 @@ export default function DashboardLayout({
   children: React.ReactNode
 }) {
   return (
-    <div className="flex min-h-screen">
-      <Sidebar />
-      <div className="flex-1 flex flex-col">
-        <Header />
-        <main className="flex-1 p-6 bg-gray-50">
+    <SidebarCookieProvider>
+      <SidebarProvider>
+        <AdminSidebar />
+        <AdminContent>
           {children}
-        </main>
-      </div>
-    </div>
+        </AdminContent>
+      </SidebarProvider>
+    </SidebarCookieProvider>
   )
 }
