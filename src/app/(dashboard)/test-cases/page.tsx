@@ -4,7 +4,7 @@ import { useState, useMemo } from 'react'
 import Link from 'next/link'
 import { useRouter } from 'next/navigation'
 import { useTestCases } from '@/hooks/use-test-cases'
-import { useProjects } from '@/hooks/use-projects'
+import { useProjects, useProjectEnvironments } from '@/hooks/use-projects'
 import { useCreateTestRun } from '@/hooks/use-test-runs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -27,6 +27,10 @@ export default function TestCasesPage() {
   const [selectedProjectId, setSelectedProjectId] = useState<string>('')
   const [selectedEnvId, setSelectedEnvId] = useState<string>('')
   const [selectedTags, setSelectedTags] = useState<string[]>([])
+  const [runSingleDialog, setRunSingleDialog] = useState(false)
+  const [singleTestProjectId, setSingleTestProjectId] = useState<string>('')
+  const [singleTestEnvId, setSingleTestEnvId] = useState<string>('')
+  const [singleTestCase, setSingleTestCase] = useState<TestCase | null>(null)
 
   const projectsList = (projects || []) as Project[]
   const projectMap = useMemo(() => {
@@ -34,6 +38,12 @@ export default function TestCasesPage() {
     projectsList.forEach((p) => map.set(p.id, p.name))
     return map
   }, [projectsList])
+
+  const { data: singleTestEnvironments } = useProjectEnvironments(singleTestProjectId)
+  const { data: runDialogEnvironments } = useProjectEnvironments(selectedProjectId)
+
+  const singleTestEnvList = (singleTestEnvironments || []) as { id: string; name: string }[]
+  const runDialogEnvList = (runDialogEnvironments || []) as { id: string; name: string }[]
 
   const getProjectName = (projectId: string) => projectMap.get(projectId) || projectId
 
@@ -52,22 +62,34 @@ export default function TestCasesPage() {
     return testCases.filter((tc: TestCase) => tc.tags?.includes(tagFilter))
   }, [testCases, tagFilter])
 
-  const handleRunSingleTest = async (testCase: TestCase) => {
+  const handleRunSingleTest = (testCase: TestCase) => {
     if (!testCase.projectId) {
       toast.error('Test case has no project associated')
+      return
+    }
+    setSingleTestCase(testCase)
+    setSingleTestProjectId(testCase.projectId)
+    setSingleTestEnvId('')
+    setRunSingleDialog(true)
+  }
+
+  const handleConfirmRunSingle = async () => {
+    if (!singleTestCase || !singleTestEnvId) {
+      toast.error('Please select an environment')
       return
     }
 
     try {
       const result = await createTestRun.mutateAsync({
-        projectId: testCase.projectId,
-        environmentId: 'default',
+        projectId: singleTestCase.projectId,
+        environmentId: singleTestEnvId,
         runType: 'manual',
-        testCaseIds: [testCase.id]
+        testCaseIds: [singleTestCase.id]
       })
 
       if (result) {
         toast.success('Test run created')
+        setRunSingleDialog(false)
         router.push(`/test-runs/${result.id}`)
       }
     } catch {
@@ -80,11 +102,15 @@ export default function TestCasesPage() {
       toast.error('Please select a project')
       return
     }
+    if (!selectedEnvId) {
+      toast.error('Please select an environment')
+      return
+    }
 
     try {
       const result = await createTestRun.mutateAsync({
         projectId: selectedProjectId,
-        environmentId: selectedEnvId || 'default',
+        environmentId: selectedEnvId,
         runType: 'manual',
         tags: selectedTags.length > 0 ? selectedTags : undefined
       })
@@ -119,7 +145,7 @@ export default function TestCasesPage() {
               <DialogHeader>
                 <DialogTitle>Run Tests by Tag</DialogTitle>
                 <DialogDescription>
-                  Select a project and tags to run specific test cases
+                  Select a project, environment, and tags to run specific test cases
                 </DialogDescription>
               </DialogHeader>
               <div className="space-y-4 py-4">
@@ -136,6 +162,21 @@ export default function TestCasesPage() {
                     </SelectContent>
                   </Select>
                 </div>
+                {selectedProjectId && (
+                  <div className="space-y-2">
+                    <label className="text-sm font-medium">Environment</label>
+                    <Select value={selectedEnvId} onValueChange={setSelectedEnvId}>
+                      <SelectTrigger className="w-full">
+                        <SelectValue placeholder="Select environment" />
+                      </SelectTrigger>
+                      <SelectContent>
+                        {runDialogEnvList.map((e) => (
+                          <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+                        ))}
+                      </SelectContent>
+                    </Select>
+                  </div>
+                )}
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Tags</label>
                   <div className="flex flex-wrap gap-2">
@@ -163,7 +204,7 @@ export default function TestCasesPage() {
                 <Button variant="outline" onClick={() => setRunDialogOpen(false)}>
                   Cancel
                 </Button>
-                <Button onClick={handleRunByTags} disabled={createTestRun.isPending || !selectedProjectId}>
+                <Button onClick={handleRunByTags} disabled={createTestRun.isPending || !selectedProjectId || !selectedEnvId}>
                   {createTestRun.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
                   Run Tests
                 </Button>
@@ -254,6 +295,45 @@ export default function TestCasesPage() {
           ))}
         </div>
       )}
+
+      {/* Single Test Run Dialog */}
+      <Dialog open={runSingleDialog} onOpenChange={setRunSingleDialog}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Run Test Case</DialogTitle>
+            <DialogDescription>
+              Select an environment to run &quot;{singleTestCase?.title}&quot;
+            </DialogDescription>
+          </DialogHeader>
+          <div className="py-4">
+            <div className="space-y-2">
+              <label className="text-sm font-medium">Environment</label>
+              <Select value={singleTestEnvId} onValueChange={setSingleTestEnvId}>
+                <SelectTrigger className="w-full">
+                  <SelectValue placeholder="Select environment" />
+                </SelectTrigger>
+                <SelectContent>
+                  {singleTestEnvList.map((e) => (
+                    <SelectItem key={e.id} value={e.id}>{e.name}</SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+              {singleTestEnvList.length === 0 && (
+                <p className="text-sm text-orange-500">No environments found. Add one in project settings first.</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setRunSingleDialog(false)}>
+              Cancel
+            </Button>
+            <Button onClick={handleConfirmRunSingle} disabled={createTestRun.isPending || !singleTestEnvId}>
+              {createTestRun.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+              Run Test
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }
