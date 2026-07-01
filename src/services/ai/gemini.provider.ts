@@ -64,9 +64,9 @@ export class GeminiProvider implements AIProvider {
   }
 
   async generateTestPlan(params: GenerateTestPlanParams): Promise<TestPlan> {
-    const apiKey = getApiKey()
+    getApiKey() // Validate key exists
     const { object } = await generateObject({
-      model: google(this.model, { apiKey }),
+      model: google(this.model),
       schema: testPlanSchema,
       system: getTestPlanSystemPrompt(),
       prompt: `Create a Playwright test plan for:\nURL: ${params.url}\nGoal: ${params.goal}\nRole: ${params.role || 'User'}\nDestructive actions allowed: ${params.destructiveAllowed ? 'Yes' : 'No'}`
@@ -75,10 +75,10 @@ export class GeminiProvider implements AIProvider {
   }
 
   async generatePlaywrightCode(params: GenerateCodeParams): Promise<string> {
-    const apiKey = getApiKey()
+    getApiKey()
     const prompt = getCodeGenerationPrompt(params)
     const { object } = await generateObject({
-      model: google(this.model, { apiKey }),
+      model: google(this.model),
       schema: z.object({ code: z.string() }),
       system: 'You are a senior Playwright TypeScript engineer. Generate only valid TypeScript code.',
       prompt
@@ -87,10 +87,10 @@ export class GeminiProvider implements AIProvider {
   }
 
   async analyzeFailure(params: AnalyzeFailureParams): Promise<FailureAnalysis> {
-    const apiKey = getApiKey()
+    getApiKey()
     const prompt = getFailureAnalysisPrompt(params)
     const { object } = await generateObject({
-      model: google(this.model, { apiKey }),
+      model: google(this.model),
       schema: failureAnalysisSchema,
       system: 'You are a QA automation debugging assistant.',
       prompt
