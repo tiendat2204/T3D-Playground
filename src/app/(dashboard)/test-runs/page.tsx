@@ -1,5 +1,6 @@
 'use client'
 
+import Link from 'next/link'
 import { useTestRuns } from '@/hooks/use-test-runs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Badge } from '@/components/ui/badge'
@@ -37,30 +38,32 @@ export default function TestRunsPage() {
       ) : (
         <div className="grid gap-4">
           {testRuns.map((run) => (
-            <Card key={run.id}>
-              <CardHeader className="pb-3">
-                <div className="flex items-center justify-between">
-                  <CardTitle className="text-lg flex items-center gap-2">
-                    {getStatusIcon(run.status)}
-                    Test Run
-                  </CardTitle>
-                  <Badge variant={run.status === 'passed' ? 'default' : run.status === 'failed' ? 'destructive' : 'secondary'}>
-                    {run.status}
-                  </Badge>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="flex gap-4 text-sm text-gray-600">
-                  <span>Type: {run.runType}</span>
-                  <span>Created: {new Date(run.createdAt).toLocaleDateString()}</span>
-                  {run.summary && (
-                    <span>
-                      Results: {run.summary.passed}/{run.summary.total} passed
-                    </span>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
+            <Link key={run.id} href={`/test-runs/${run.id}`}>
+              <Card className="hover:bg-gray-50 transition-colors cursor-pointer">
+                <CardHeader className="pb-3">
+                  <div className="flex items-center justify-between">
+                    <CardTitle className="text-lg flex items-center gap-2">
+                      {getStatusIcon(run.status)}
+                      Test Run
+                    </CardTitle>
+                    <Badge variant={run.status === 'passed' ? 'default' : run.status === 'failed' ? 'destructive' : 'secondary'}>
+                      {run.status}
+                    </Badge>
+                  </div>
+                </CardHeader>
+                <CardContent>
+                  <div className="flex gap-4 text-sm text-gray-600">
+                    <span>Type: {run.runType}</span>
+                    <span>Created: {new Date(run.createdAt).toLocaleDateString()}</span>
+                    {run.summary && (
+                      <span>
+                        Results: {run.summary.passed}/{run.summary.total} passed
+                      </span>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
           ))}
         </div>
       )}

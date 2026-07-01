@@ -4,13 +4,15 @@ import * as React from 'react'
 import { useParams, useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { useProject, useProjectEnvironments, useCreateEnvironment, useDeleteProject } from '@/hooks/use-projects'
+import { useCreateTestRun } from '@/hooks/use-test-runs'
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Label } from '@/components/ui/label'
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from '@/components/ui/dialog'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
-import { ArrowLeft, Plus, Trash2, Loader2 } from 'lucide-react'
+import { ArrowLeft, Plus, Trash2, Loader2, Play } from 'lucide-react'
 import { toast } from 'sonner'
 
 export default function ProjectDetailPage() {
@@ -21,10 +23,16 @@ export default function ProjectDetailPage() {
   const { data: environments } = useProjectEnvironments(id)
   const createEnvironment = useCreateEnvironment()
   const deleteProject = useDeleteProject()
+  const createTestRun = useCreateTestRun()
 
   const [openEnvDialog, setOpenEnvDialog] = React.useState(false)
   const [envName, setEnvName] = React.useState('')
   const [envUrl, setEnvUrl] = React.useState('')
+  const [runDialogOpen, setRunDialogOpen] = React.useState(false)
+  const [selectedEnvId, setSelectedEnvId] = React.useState<string>('')
+  const [selectedTags, setSelectedTags] = React.useState<string[]>([])
+
+  const availableTags = ['@smoke', '@regression', '@critical', '@fast', '@slow']
 
   const handleCreateEnvironment = async (e: React.FormEvent) => {
     e.preventDefault()
@@ -48,6 +56,32 @@ export default function ProjectDetailPage() {
     router.push('/projects')
   }
 
+  const handleRunAllTests = async () => {
+    const envId = selectedEnvId || environments?.[0]?.id
+    if (!envId) {
+      toast.error('Please add an environment first')
+      return
+    }
+
+    try {
+      const result = await createTestRun.mutateAsync({
+        projectId: id,
+        environmentId: envId,
+        runType: 'manual',
+        tags: selectedTags.length > 0 ? selectedTags : undefined
+      })
+
+      if (result) {
+        toast.success('Test run created')
+        setRunDialogOpen(false)
+        setSelectedTags([])
+        router.push(`/test-runs/${result.id}`)
+      }
+    } catch {
+      toast.error('Failed to create test run')
+    }
+  }
+
   if (isLoading) {
     return <div className="text-center py-8">Loading...</div>
   }
@@ -68,6 +102,70 @@ export default function ProjectDetailPage() {
           <h1 className="text-2xl font-bold">{project.name}</h1>
           <p className="text-gray-600">{project.baseUrl}</p>
         </div>
+        <Dialog open={runDialogOpen} onOpenChange={setRunDialogOpen}>
+          <DialogTrigger asChild>
+            <Button>
+              <Play className="w-4 h-4 mr-2" />
+              Run All Tests
+            </Button>
+          </DialogTrigger>
+          <DialogContent>
+            <DialogHeader>
+              <DialogTitle>Run All Tests</DialogTitle>
+              <DialogDescription>
+                Run all approved test cases for this project
+              </DialogDescription>
+            </DialogHeader>
+            <div className="space-y-4 py-4">
+              <div className="space-y-2">
+                <Label>Environment</Label>
+                <Select value={selectedEnvId} onValueChange={setSelectedEnvId}>
+                  <SelectTrigger className="w-full">
+                    <SelectValue placeholder="Select environment" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {environments?.map((env) => (
+                      <SelectItem key={env.id} value={env.id}>{env.name}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+                {(!environments || environments.length === 0) && (
+                  <p className="text-sm text-orange-600">
+                    No environments configured. Add one first.
+                  </p>
+                )}
+              </div>
+              <div className="space-y-2">
+                <Label>Filter by Tags (optional)</Label>
+                <div className="flex flex-wrap gap-2">
+                  {availableTags.map((tag) => (
+                    <Button
+                      key={tag}
+                      size="sm"
+                      variant={selectedTags.includes(tag) ? 'default' : 'outline'}
+                      onClick={() => {
+                        setSelectedTags(prev =>
+                          prev.includes(tag) ? prev.filter(t => t !== tag) : [...prev, tag]
+                        )
+                      }}
+                    >
+                      {tag}
+                    </Button>
+                  ))}
+                </div>
+              </div>
+            </div>
+            <DialogFooter>
+              <Button variant="outline" onClick={() => setRunDialogOpen(false)}>
+                Cancel
+              </Button>
+              <Button onClick={handleRunAllTests} disabled={createTestRun.isPending}>
+                {createTestRun.isPending && <Loader2 className="w-4 h-4 mr-2 animate-spin" />}
+                Run Tests
+              </Button>
+            </DialogFooter>
+          </DialogContent>
+        </Dialog>
         <Button variant="destructive" onClick={handleDelete} disabled={deleteProject.isPending}>
           <Trash2 className="w-4 h-4 mr-2" />
           Delete Project

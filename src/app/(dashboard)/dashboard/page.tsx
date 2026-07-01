@@ -4,6 +4,7 @@ import { useProjects } from '@/hooks/use-projects'
 import { useTestCases } from '@/hooks/use-test-cases'
 import { useTestRuns } from '@/hooks/use-test-runs'
 import { MetricsCards } from '@/components/dashboard/metrics-cards'
+import { RecentRuns } from '@/components/dashboard/recent-runs'
 
 export default function DashboardPage() {
   const { data: projects } = useProjects()
@@ -35,6 +36,10 @@ export default function DashboardPage() {
         passRate={passRate}
         failRate={failRate}
       />
+
+      <div className="grid gap-6 md:grid-cols-2">
+        <RecentRuns />
+      </div>
     </div>
   )
 }
