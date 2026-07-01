@@ -6,7 +6,13 @@ import { api } from '@/lib/api-client'
 export function useTestRuns(filters?: Record<string, string>) {
   return useQuery({
     queryKey: ['testRuns', filters],
-    queryFn: () => api.testRuns.list(filters)
+    queryFn: async () => {
+      try {
+        return await api.testRuns.list(filters)
+      } catch {
+        return []
+      }
+    }
   })
 }
 

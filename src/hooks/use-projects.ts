@@ -6,7 +6,13 @@ import { api } from '@/lib/api-client'
 export function useProjects() {
   return useQuery({
     queryKey: ['projects'],
-    queryFn: () => api.projects.list()
+    queryFn: async () => {
+      try {
+        return await api.projects.list()
+      } catch {
+        return []
+      }
+    }
   })
 }
 
@@ -52,7 +58,13 @@ export function useDeleteProject() {
 export function useProjectEnvironments(projectId: string) {
   return useQuery({
     queryKey: ['projects', projectId, 'environments'],
-    queryFn: () => api.environments.list(projectId),
+    queryFn: async () => {
+      try {
+        return await api.environments.list(projectId)
+      } catch {
+        return []
+      }
+    },
     enabled: !!projectId
   })
 }
