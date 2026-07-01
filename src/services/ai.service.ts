@@ -8,6 +8,16 @@ const apiClient = axios.create({
   }
 })
 
+apiClient.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.code === 'ECONNREFUSED' || error.response?.status === 503) {
+      return { data: { data: null } }
+    }
+    return Promise.reject(error)
+  }
+)
+
 interface ApiResponse<T> {
   data: T
 }
@@ -59,33 +69,33 @@ export interface FailureAnalysis {
 }
 
 export const aiService = {
-  generatePlan: async (data: GenerateTestPlanInput): Promise<TestPlan> => {
+  generatePlan: async (data: GenerateTestPlanInput): Promise<TestPlan | null> => {
     try {
       const res: AxiosResponse<ApiResponse<TestPlan>> = await apiClient.post('/ai/generate-plan', data)
-      return res.data.data
+      return res.data.data || null
     } catch (error) {
       console.error('aiService.generatePlan error', error)
-      throw error
+      return null
     }
   },
 
-  generateCode: async (data: GenerateCodeInput): Promise<string> => {
+  generateCode: async (data: GenerateCodeInput): Promise<string | null> => {
     try {
       const res: AxiosResponse<ApiResponse<{ code: string }>> = await apiClient.post('/ai/generate-code', data)
-      return res.data.data.code
+      return res.data.data?.code || null
     } catch (error) {
       console.error('aiService.generateCode error', error)
-      throw error
+      return null
     }
   },
 
-  analyzeFailure: async (data: { testRunResultId: string }): Promise<FailureAnalysis> => {
+  analyzeFailure: async (data: { testRunResultId: string }): Promise<FailureAnalysis | null> => {
     try {
       const res: AxiosResponse<ApiResponse<FailureAnalysis>> = await apiClient.post('/ai/analyze-failure', data)
-      return res.data.data
+      return res.data.data || null
     } catch (error) {
       console.error('aiService.analyzeFailure error', error)
-      throw error
+      return null
     }
   }
 }

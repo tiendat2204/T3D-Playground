@@ -8,6 +8,16 @@ const apiClient = axios.create({
   }
 })
 
+apiClient.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.code === 'ECONNREFUSED' || error.response?.status === 503) {
+      return { data: { data: [] } }
+    }
+    return Promise.reject(error)
+  }
+)
+
 interface ApiResponse<T> {
   data: T
 }
@@ -44,60 +54,60 @@ export const testCasesService = {
   list: async (params?: Record<string, string>): Promise<TestCase[]> => {
     try {
       const res: AxiosResponse<ApiResponse<TestCase[]>> = await apiClient.get('/test-cases', { params })
-      return res.data.data
+      return res.data.data || []
     } catch (error) {
       console.error('testCasesService.list error', error)
-      throw error
+      return []
     }
   },
 
-  get: async (id: string): Promise<TestCase> => {
+  get: async (id: string): Promise<TestCase | null> => {
     try {
       const res: AxiosResponse<ApiResponse<TestCase>> = await apiClient.get(`/test-cases/${id}`)
-      return res.data.data
+      return res.data.data || null
     } catch (error) {
       console.error('testCasesService.get error', error)
-      throw error
+      return null
     }
   },
 
-  create: async (data: CreateTestCaseInput): Promise<TestCase> => {
+  create: async (data: CreateTestCaseInput): Promise<TestCase | null> => {
     try {
       const res: AxiosResponse<ApiResponse<TestCase>> = await apiClient.post('/test-cases', data)
-      return res.data.data
+      return res.data.data || null
     } catch (error) {
       console.error('testCasesService.create error', error)
-      throw error
+      return null
     }
   },
 
-  update: async (id: string, data: Partial<CreateTestCaseInput>): Promise<TestCase> => {
+  update: async (id: string, data: Partial<CreateTestCaseInput>): Promise<TestCase | null> => {
     try {
       const res: AxiosResponse<ApiResponse<TestCase>> = await apiClient.put(`/test-cases/${id}`, data)
-      return res.data.data
+      return res.data.data || null
     } catch (error) {
       console.error('testCasesService.update error', error)
-      throw error
+      return null
     }
   },
 
-  approve: async (id: string): Promise<TestCase> => {
+  approve: async (id: string): Promise<TestCase | null> => {
     try {
       const res: AxiosResponse<ApiResponse<TestCase>> = await apiClient.post(`/test-cases/${id}/approve`)
-      return res.data.data
+      return res.data.data || null
     } catch (error) {
       console.error('testCasesService.approve error', error)
-      throw error
+      return null
     }
   },
 
-  disable: async (id: string): Promise<TestCase> => {
+  disable: async (id: string): Promise<TestCase | null> => {
     try {
       const res: AxiosResponse<ApiResponse<TestCase>> = await apiClient.post(`/test-cases/${id}/disable`)
-      return res.data.data
+      return res.data.data || null
     } catch (error) {
       console.error('testCasesService.disable error', error)
-      throw error
+      return null
     }
   }
 }

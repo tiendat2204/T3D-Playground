@@ -8,6 +8,16 @@ const apiClient = axios.create({
   }
 })
 
+apiClient.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.code === 'ECONNREFUSED' || error.response?.status === 503) {
+      return { data: { data: [] } }
+    }
+    return Promise.reject(error)
+  }
+)
+
 interface ApiResponse<T> {
   data: T
 }
@@ -56,40 +66,40 @@ export const bugReportsService = {
   list: async (params?: Record<string, string>): Promise<BugReport[]> => {
     try {
       const res: AxiosResponse<ApiResponse<BugReport[]>> = await apiClient.get('/bug-reports', { params })
-      return res.data.data
+      return res.data.data || []
     } catch (error) {
       console.error('bugReportsService.list error', error)
-      throw error
+      return []
     }
   },
 
-  get: async (id: string): Promise<BugReport> => {
+  get: async (id: string): Promise<BugReport | null> => {
     try {
       const res: AxiosResponse<ApiResponse<BugReport>> = await apiClient.get(`/bug-reports/${id}`)
-      return res.data.data
+      return res.data.data || null
     } catch (error) {
       console.error('bugReportsService.get error', error)
-      throw error
+      return null
     }
   },
 
-  create: async (data: CreateBugReportInput): Promise<BugReport> => {
+  create: async (data: CreateBugReportInput): Promise<BugReport | null> => {
     try {
       const res: AxiosResponse<ApiResponse<BugReport>> = await apiClient.post('/bug-reports', data)
-      return res.data.data
+      return res.data.data || null
     } catch (error) {
       console.error('bugReportsService.create error', error)
-      throw error
+      return null
     }
   },
 
-  update: async (id: string, data: Partial<BugReport>): Promise<BugReport> => {
+  update: async (id: string, data: Partial<BugReport>): Promise<BugReport | null> => {
     try {
       const res: AxiosResponse<ApiResponse<BugReport>> = await apiClient.put(`/bug-reports/${id}`, data)
-      return res.data.data
+      return res.data.data || null
     } catch (error) {
       console.error('bugReportsService.update error', error)
-      throw error
+      return null
     }
   }
 }

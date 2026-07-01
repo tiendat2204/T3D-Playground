@@ -8,6 +8,16 @@ const apiClient = axios.create({
   }
 })
 
+apiClient.interceptors.response.use(
+  response => response,
+  error => {
+    if (error.code === 'ECONNREFUSED' || error.response?.status === 503) {
+      return { data: { data: [] } }
+    }
+    return Promise.reject(error)
+  }
+)
+
 interface ApiResponse<T> {
   data: T
 }
@@ -43,40 +53,40 @@ export const testRunsService = {
   list: async (params?: Record<string, string>): Promise<TestRun[]> => {
     try {
       const res: AxiosResponse<ApiResponse<TestRun[]>> = await apiClient.get('/test-runs', { params })
-      return res.data.data
+      return res.data.data || []
     } catch (error) {
       console.error('testRunsService.list error', error)
-      throw error
+      return []
     }
   },
 
-  get: async (id: string): Promise<TestRun> => {
+  get: async (id: string): Promise<TestRun | null> => {
     try {
       const res: AxiosResponse<ApiResponse<TestRun>> = await apiClient.get(`/test-runs/${id}`)
-      return res.data.data
+      return res.data.data || null
     } catch (error) {
       console.error('testRunsService.get error', error)
-      throw error
+      return null
     }
   },
 
-  create: async (data: CreateTestRunInput): Promise<TestRun> => {
+  create: async (data: CreateTestRunInput): Promise<TestRun | null> => {
     try {
       const res: AxiosResponse<ApiResponse<TestRun>> = await apiClient.post('/test-runs', data)
-      return res.data.data
+      return res.data.data || null
     } catch (error) {
       console.error('testRunsService.create error', error)
-      throw error
+      return null
     }
   },
 
-  cancel: async (id: string): Promise<TestRun> => {
+  cancel: async (id: string): Promise<TestRun | null> => {
     try {
       const res: AxiosResponse<ApiResponse<TestRun>> = await apiClient.post(`/test-runs/${id}/cancel`)
-      return res.data.data
+      return res.data.data || null
     } catch (error) {
       console.error('testRunsService.cancel error', error)
-      throw error
+      return null
     }
   }
 }
