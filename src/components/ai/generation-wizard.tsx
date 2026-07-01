@@ -11,6 +11,7 @@ import { Textarea } from '@/components/ui/textarea'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Loader2, Sparkles, ArrowLeft, ArrowRight, Check, Copy, Download, Code } from 'lucide-react'
 import { toast } from 'sonner'
+import { CodeBlock } from '@/components/ui/code-block'
 
 export function GenerationWizard() {
   const [step, setStep] = React.useState(0)
@@ -251,7 +252,12 @@ export function GenerationWizard() {
                 </div>
               </CardHeader>
               <CardContent>
-                <pre className="bg-gray-900 text-gray-100 p-4 rounded-none overflow-x-auto text-sm">{generatedCode}</pre>
+                <CodeBlock
+                  code={generatedCode}
+                  language="typescript"
+                  filename="test.spec.ts"
+                  showLineNumbers
+                />
               </CardContent>
             </Card>
           )}

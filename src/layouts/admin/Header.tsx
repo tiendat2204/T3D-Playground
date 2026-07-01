@@ -3,16 +3,18 @@ import { SidebarTrigger } from '@/components/ui/sidebar'
 import { Separator } from '@/components/ui/separator'
 import { Search } from 'lucide-react'
 import { Button } from '@/components/ui/button'
+import { ThemeToggle } from '@/components/layout/theme-toggle'
 
 const Header = () => {
   return (
-    <header className='sticky top-0 z-20 flex w-full bg-card border-b'>
+    <header className='sticky top-0 z-20 flex w-full bg-card border-b dark:border-gray-800'>
       <div className='mx-4 flex h-16 w-full items-center justify-between'>
         <div className='flex items-center gap-2'>
           <SidebarTrigger className='-ml-1' />
           <Separator orientation='vertical' className='mr-2 h-4' />
         </div>
         <div className='flex items-center gap-4 '>
+          <ThemeToggle />
           <div className='hidden md:flex items-center gap-2'>
             <Button
               variant='outline'

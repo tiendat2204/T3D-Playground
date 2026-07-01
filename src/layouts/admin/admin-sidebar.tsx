@@ -21,7 +21,7 @@ export function AdminSidebar () {
             variant='link'
             asChild
           >
-            <span className='w-full h-5 md:h-12 flex items-center justify-center font-bold text-lg'>
+            <span className='w-full h-5 md:h-12 flex items-center justify-center font-bold text-lg dark:text-gray-100'>
               AI Regression
             </span>
           </Button>
