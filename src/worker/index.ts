@@ -45,17 +45,21 @@ async function processTestRunJob(data: unknown) {
 
 const worker = createTestRunWorker(processTestRunJob)
 
-worker.on('completed', job => {
-  console.log(`Job ${job.id} completed`)
-})
+if (worker) {
+  worker.on('completed', job => {
+    console.log(`Job ${job.id} completed`)
+  })
 
-worker.on('failed', (job, err) => {
-  console.error(`Job ${job?.id} failed:`, err)
-})
+  worker.on('failed', (job, err) => {
+    console.error(`Job ${job?.id} failed:`, err)
+  })
 
-console.log('Worker started, waiting for jobs...')
+  console.log('Worker started, waiting for jobs...')
 
-process.on('SIGTERM', async () => {
-  await worker.close()
-  process.exit(0)
-})
+  process.on('SIGTERM', async () => {
+    await worker.close()
+    process.exit(0)
+  })
+} else {
+  console.log('Worker not started (Redis not configured)')
+}
