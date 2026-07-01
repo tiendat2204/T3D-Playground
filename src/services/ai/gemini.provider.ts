@@ -55,6 +55,23 @@ function getApiKey(): string {
   return apiKey
 }
 
+async function withRetry<T>(fn: () => Promise<T>, maxRetries = 5): Promise<T> {
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
+    try {
+      return await fn()
+    } catch (error: unknown) {
+      const isRetryable = error && typeof error === 'object' && 'isRetryable' in error && (error as { isRetryable: boolean }).isRetryable
+      if (!isRetryable || attempt === maxRetries) {
+        throw error
+      }
+      const delay = Math.min(1000 * Math.pow(2, attempt - 1), 30000)
+      console.log(`Retry attempt ${attempt}/${maxRetries} after ${delay}ms...`)
+      await new Promise(resolve => setTimeout(resolve, delay))
+    }
+  }
+  throw new Error('Max retries exceeded')
+}
+
 export class GeminiProvider implements AIProvider {
   name = 'gemini'
   private model: string
@@ -64,37 +81,43 @@ export class GeminiProvider implements AIProvider {
   }
 
   async generateTestPlan(params: GenerateTestPlanParams): Promise<TestPlan> {
-    getApiKey() // Validate key exists
-    const { object } = await generateObject({
-      model: google(this.model),
-      schema: testPlanSchema,
-      system: getTestPlanSystemPrompt(),
-      prompt: `Create a Playwright test plan for:\nURL: ${params.url}\nGoal: ${params.goal}\nRole: ${params.role || 'User'}\nDestructive actions allowed: ${params.destructiveAllowed ? 'Yes' : 'No'}`
+    getApiKey()
+    return withRetry(async () => {
+      const { object } = await generateObject({
+        model: google(this.model),
+        schema: testPlanSchema,
+        system: getTestPlanSystemPrompt(),
+        prompt: `Create a Playwright test plan for:\nURL: ${params.url}\nGoal: ${params.goal}\nRole: ${params.role || 'User'}\nDestructive actions allowed: ${params.destructiveAllowed ? 'Yes' : 'No'}`
+      })
+      return object as TestPlan
     })
-    return object as TestPlan
   }
 
   async generatePlaywrightCode(params: GenerateCodeParams): Promise<string> {
     getApiKey()
-    const prompt = getCodeGenerationPrompt(params)
-    const { object } = await generateObject({
-      model: google(this.model),
-      schema: z.object({ code: z.string() }),
-      system: 'You are a senior Playwright TypeScript engineer. Generate only valid TypeScript code.',
-      prompt
+    return withRetry(async () => {
+      const prompt = getCodeGenerationPrompt(params)
+      const { object } = await generateObject({
+        model: google(this.model),
+        schema: z.object({ code: z.string() }),
+        system: 'You are a senior Playwright TypeScript engineer. Generate only valid TypeScript code.',
+        prompt
+      })
+      return object.code
     })
-    return object.code
   }
 
   async analyzeFailure(params: AnalyzeFailureParams): Promise<FailureAnalysis> {
     getApiKey()
-    const prompt = getFailureAnalysisPrompt(params)
-    const { object } = await generateObject({
-      model: google(this.model),
-      schema: failureAnalysisSchema,
-      system: 'You are a QA automation debugging assistant.',
-      prompt
+    return withRetry(async () => {
+      const prompt = getFailureAnalysisPrompt(params)
+      const { object } = await generateObject({
+        model: google(this.model),
+        schema: failureAnalysisSchema,
+        system: 'You are a QA automation debugging assistant.',
+        prompt
+      })
+      return object as FailureAnalysis
     })
-    return object as FailureAnalysis
   }
 }
